@@ -22,7 +22,7 @@ export default function FileUpload({ dealId, user, files }: { dealId: string, us
       await deleteDoc(doc(db, 'files', file.id));
       
       // 2. Delete from Storage (if it's not a simulated URL)
-      if (!file.url.startsWith('simulated-url')) {
+      if (file.url && !file.url.startsWith('simulated-url')) {
         try {
           const storageRef = ref(storage, `deals/${dealId}/${file.name}`);
           await deleteObject(storageRef);
@@ -145,7 +145,7 @@ export default function FileUpload({ dealId, user, files }: { dealId: string, us
                   <Button variant="ghost" size="icon" className="h-8 w-8 border-2 border-black shadow-[2px_2px_0px_0px_rgba(0,0,0,1)]" onClick={() => window.open(file.url, '_blank')}>
                     <Download className="w-4 h-4" />
                   </Button>
-                  <Button variant="ghost" size="icon" className="h-8 w-8 border-2 border-[#CC0000] text-[#CC0000] shadow-[2px_2px_0px_0px_rgba(204,0,0,1)] hover:bg-red-50" onClick={() => setFileToDelete(file)}>
+                  <Button variant="ghost" size="icon" className="h-8 w-8 border-2 border-[#CC0000] text-[#CC0000] shadow-[2px_2px_0px_0px_rgba(204,0,0,1)] hover:bg-red-50" onClick={(e) => { e.stopPropagation(); setFileToDelete(file); }}>
                     <Trash2 className="w-4 h-4" />
                   </Button>
                 </div>
@@ -157,7 +157,7 @@ export default function FileUpload({ dealId, user, files }: { dealId: string, us
 
       {/* Custom Confirmation Modal */}
       {fileToDelete && (
-        <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
+        <div className="fixed inset-0 bg-black/50 z-[9999] flex items-center justify-center p-4">
           <div className="bg-white border-4 border-black p-6 max-w-md w-full shadow-[8px_8px_0px_0px_rgba(0,0,0,1)]">
             <h3 className="text-xl font-bold uppercase tracking-wider text-black mb-4">Delete File</h3>
             <p className="mb-6 font-medium text-gray-700">

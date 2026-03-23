@@ -7,6 +7,8 @@ import { ArrowLeft, FileText, MessageSquare, FileUp, Download, Sparkles, BrainCi
 import { Button } from '../components/ui/Button';
 import Chat from '../components/Chat';
 import FileUpload from '../components/FileUpload';
+import TaskBoard from '../components/TaskBoard';
+import TaskModal from '../components/TaskModal';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 
@@ -28,6 +30,7 @@ export default function DealRoom({ user }: { user: User }) {
   const [memos, setMemos] = useState<any[]>([]);
   const [tasks, setTasks] = useState<any[]>([]);
   const [selectedMemoId, setSelectedMemoId] = useState<string | null>(null);
+  const [isTaskModalOpen, setIsTaskModalOpen] = useState(false);
 
   useEffect(() => {
     if (!dealId) return;
@@ -124,9 +127,14 @@ export default function DealRoom({ user }: { user: User }) {
             <div className="p-6 h-full overflow-auto">
               <div className="flex items-center justify-between mb-6 border-b-2 border-black pb-4">
                 <h2 className="text-lg font-bold uppercase tracking-wider text-black">Due Diligence Tasks</h2>
-                <Button onClick={() => setIsChatOpen(true)} variant="outline" size="sm" className="border-2 border-black shadow-[2px_2px_0px_0px_rgba(0,0,0,1)]">
-                  <Sparkles className="w-4 h-4 mr-2" /> Ask AI to Create Task
-                </Button>
+                <div className="flex gap-2">
+                  <Button onClick={() => setIsTaskModalOpen(true)} variant="outline" size="sm" className="border-2 border-black shadow-[2px_2px_0px_0px_rgba(0,0,0,1)]">
+                    <CheckSquare className="w-4 h-4 mr-2" /> New Task
+                  </Button>
+                  <Button onClick={() => setIsChatOpen(true)} variant="outline" size="sm" className="border-2 border-black shadow-[2px_2px_0px_0px_rgba(0,0,0,1)]">
+                    <Sparkles className="w-4 h-4 mr-2" /> Ask AI to Create Task
+                  </Button>
+                </div>
               </div>
               {tasks.length === 0 ? (
                 <div className="flex flex-col items-center justify-center h-64 text-center border-2 border-dashed border-black bg-white shadow-[4px_4px_0px_0px_rgba(0,0,0,1)]">
@@ -137,28 +145,7 @@ export default function DealRoom({ user }: { user: User }) {
                   </p>
                 </div>
               ) : (
-                <div className="grid gap-4">
-                  {tasks.map(task => (
-                    <div key={task.id} className="p-4 border-2 border-black bg-white shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] hover:translate-y-[2px] hover:translate-x-[2px] hover:shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] transition-all">
-                      <div className="flex items-center justify-between mb-2">
-                        <h3 className="font-bold text-lg text-black uppercase tracking-wider">{task.title}</h3>
-                        <div className="flex gap-2">
-                          <span className={`text-xs font-bold uppercase tracking-wider px-2 py-1 border-2 border-black ${task.priority === 'high' ? 'bg-red-200 text-red-900' : task.priority === 'medium' ? 'bg-yellow-200 text-yellow-900' : 'bg-green-200 text-green-900'}`}>
-                            {task.priority}
-                          </span>
-                          <span className={`text-xs font-bold uppercase tracking-wider px-2 py-1 border-2 border-black ${task.status === 'done' ? 'bg-gray-200 text-gray-900' : task.status === 'in-progress' ? 'bg-blue-200 text-blue-900' : 'bg-white text-black'}`}>
-                            {task.status}
-                          </span>
-                        </div>
-                      </div>
-                      {task.description && <p className="text-sm text-gray-600 font-medium mb-4">{task.description}</p>}
-                      <div className="flex justify-between items-center mt-4 pt-4 border-t-2 border-gray-200">
-                        <p className="text-xs text-black font-bold uppercase tracking-wider">Assigned to: {task.assignedTo || 'Unassigned'}</p>
-                        <p className="text-xs text-black font-bold uppercase tracking-wider">Created on {new Date(task.createdAt).toLocaleDateString()}</p>
-                      </div>
-                    </div>
-                  ))}
-                </div>
+                <TaskBoard tasks={tasks} dealId={dealId!} />
               )}
             </div>
           )}
@@ -213,6 +200,11 @@ export default function DealRoom({ user }: { user: User }) {
         <div className="w-[400px] border-l-2 border-black bg-white flex-shrink-0 animate-in slide-in-from-right-8 duration-300 shadow-[-8px_0px_0px_0px_rgba(0,0,0,1)] z-10">
           <Chat deal={deal} dealId={dealId!} user={user} files={files} memos={memos} tasks={tasks} onClose={() => setIsChatOpen(false)} />
         </div>
+      )}
+
+      {/* Modals */}
+      {isTaskModalOpen && (
+        <TaskModal dealId={dealId!} user={user} onClose={() => setIsTaskModalOpen(false)} />
       )}
     </div>
   );

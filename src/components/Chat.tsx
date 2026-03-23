@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from 'react';
-import { collection, query, orderBy, onSnapshot, addDoc, doc, updateDoc, serverTimestamp } from 'firebase/firestore';
+import { collection, query, orderBy, onSnapshot, addDoc, doc, updateDoc, deleteDoc, serverTimestamp } from 'firebase/firestore';
 import { ref, getBytes } from 'firebase/storage';
 import { db, storage } from '../firebase';
 import { User } from 'firebase/auth';
@@ -88,8 +88,57 @@ export default function Chat({ deal, dealId, user, files, memos, tasks, onClose 
 Your goal is to assist the consultant with analyzing tech stacks, evaluating software architecture, identifying technical debt, and assessing the target company's engineering team.
 Be professional, analytical, concise, and use Bain's consulting frameworks when applicable.
 You have advanced capabilities including document summarization, data extraction from tables, and code analysis. You can perform these tasks by analyzing the files provided in the context or attachments.
+
+When asked to generate or draft a Tech Due Diligence (Tech DD) memo, you MUST use the following highly structured, mutually exclusive, and collectively exhaustive (MECE) framework. Output the memo using these exact headers, pulling the context directly from the Data Room files:
+
+1. Executive Summary & Investment Thesis Alignment
+- The Bottom Line: A high-level assessment of whether the technology is an asset or a liability.
+- Key Risks & Red Flags: The top 3-5 critical issues that could kill the deal or require immediate post-close capital (e.g., critical security vulnerabilities, severe scaling bottlenecks).
+- Thesis Alignment: Does the current tech stack support the buyer's growth plan?
+- Remediation Costs (CapEx/OpEx): High-level estimates of what it will cost to fix the identified gaps.
+
+2. Product Strategy & Roadmap
+- Current State of Product: Assessment of the current software suite, UI/UX, and core capabilities.
+- Roadmap Viability: Is the product roadmap realistic based on historical delivery velocity?
+- R&D Efficiency: How well does the engineering team translate business requirements into shipped features?
+
+3. Architecture & Infrastructure
+- System Architecture: Is it a legacy monolith or modern microservices? Is it brittle or flexible?
+- Scalability & Performance: Can the infrastructure handle the anticipated user or data volume over the holding period (typically 3–5 years)?
+- Technical Debt: Identification of shortcuts taken in the past that now slow down development or create instability.
+- Cloud Maturity: Assessment of cloud hosting (AWS, Azure, GCP), cost-efficiency, and disaster recovery / high availability.
+
+4. Software Engineering & Code Quality (SDLC)
+- Development Methodology: Agile/Scrum maturity.
+- CI/CD & Automation: How automated is their testing and deployment? (High automation = faster feature releases and fewer bugs).
+- Code Quality & Open Source Risk: Assessment of code maintainability and any licensing risks from Open Source Software (OSS) embedded in the proprietary code.
+
+5. Team & Organization
+- Leadership Capability: Assessment of the CTO/VP of Engineering. Are they the right fit for the next phase of scale?
+- Key Person Dependency: Is the entire system knowledge locked in the head of one original architect?
+- Team Structure: Ratio of developers to QA/DevOps, and the onshore vs. offshore mix.
+
+6. Cybersecurity & Data Privacy
+- Security Posture: Infrastructure security, application security (AppSec), and endpoint protection.
+- Compliance & Privacy: Adherence to standard frameworks (SOC 2, ISO 27001) and data privacy laws (GDPR, CCPA, HIPAA).
+- Incident History: Review of past breaches and the maturity of their incident response plans.
+
+7. Corporate IT & Internal Systems
+- Business Applications: Evaluation of internal tools (ERP, CRM, HRIS). Will they need to be ripped and replaced to support scale?
+- Vendor Lock-in: Are they overly dependent on a specific third-party vendor with unfavorable contract terms?
+
+8. Tech Financials & Spend
+- IT Budget Review: Is the current IT/Engineering spend aligned with industry benchmarks?
+- Future Spend: What investments (headcount, software, cloud infrastructure) are required to hit the investment thesis goals?
+
+9. AI Disruption & Defensibility (Futuristic Moat Analysis)
+- Agentic Replicability ("Vibe Code" Risk) [Score: 1-10]: Evaluation of how easily a lean team using top-tier AI coding agents could replicate the core software from scratch. (10 = Trivial to replicate via AI, 1 = Impossible due to deep proprietary complexity).
+- AI Obsolescence Risk [Score: 1-10]: The risk of the software's core value proposition being entirely replaced by autonomous AI agents or foundational models. (10 = Highly likely to be replaced, 1 = Highly insulated).
+- Futuristic Moats & Defensibility: Analysis of non-code barriers to entry that mitigate AI risk. Does the company possess physical infrastructure, proprietary datasets, hardware/chips, massive distribution networks, regulatory capture, or deep ecosystem lock-in that AI alone cannot easily replicate?
+- Overall AI Resilience Assessment: A synthesized conclusion on whether the target's technology is future-proof against the rapid advancement of AI.
+
 If asked to generate or draft a memo, use the createMemo tool. If asked to update a memo, use the updateMemo tool.
-If asked to create a task, use the createTask tool. If asked to update a task's status or priority, use the updateTask tool.
+If asked to create a task, use the createTask tool. If asked to update a task's status or priority, use the updateTask tool. If asked to delete a task, use the deleteTask tool.
 If asked to analyze, summarize, or extract data from a file in the Data Room, use the analyzeDataRoomFile tool.
 Use the updateDealMemory tool to save important context, summaries, or facts about this deal that you should remember across multiple interactions.${dealContext}${fileContext}${memoContext}${taskContext}`;
 
@@ -175,6 +224,18 @@ Use the updateDealMemory tool to save important context, summaries, or facts abo
         }
       };
 
+      const deleteTaskFunction: FunctionDeclaration = {
+        name: "deleteTask",
+        description: "Delete an existing due diligence task.",
+        parameters: {
+          type: Type.OBJECT,
+          properties: {
+            taskId: { type: Type.STRING, description: "The ID of the task to delete." }
+          },
+          required: ["taskId"]
+        }
+      };
+
       // Format history for Gemini API
       const historyContents: any[] = messages
         .filter(m => m.role === 'user' || m.role === 'model')
@@ -204,8 +265,8 @@ Use the updateDealMemory tool to save important context, summaries, or facts abo
           systemInstruction: systemInstruction,
           temperature: 0.2,
           tools: thinkingMode 
-            ? [{ functionDeclarations: [createMemoFunction, updateMemoFunction, createTaskFunction, updateTaskFunction, analyzeDataRoomFileFunction, updateDealMemoryFunction] }] 
-            : [{ googleSearch: {} }, { functionDeclarations: [createMemoFunction, updateMemoFunction, createTaskFunction, updateTaskFunction, analyzeDataRoomFileFunction, updateDealMemoryFunction] }],
+            ? [{ functionDeclarations: [createMemoFunction, updateMemoFunction, createTaskFunction, updateTaskFunction, deleteTaskFunction, analyzeDataRoomFileFunction, updateDealMemoryFunction] }] 
+            : [{ googleSearch: {} }, { functionDeclarations: [createMemoFunction, updateMemoFunction, createTaskFunction, updateTaskFunction, deleteTaskFunction, analyzeDataRoomFileFunction, updateDealMemoryFunction] }],
           toolConfig: { includeServerSideToolInvocations: true },
           thinkingConfig: thinkingMode ? { thinkingLevel: ThinkingLevel.HIGH } : undefined
         }
@@ -267,6 +328,13 @@ Use the updateDealMemory tool to save important context, summaries, or facts abo
               name: call.name,
               response: { result: `Task updated successfully.` }
             });
+          } else if (call.name === 'deleteTask') {
+            const args = call.args as any;
+            await deleteDoc(doc(db, 'tasks', args.taskId));
+            functionResponses.push({
+              name: call.name,
+              response: { result: `Task deleted successfully.` }
+            });
           } else if (call.name === 'updateDealMemory') {
             const args = call.args as any;
             await updateDoc(doc(db, 'deals', dealId), {
@@ -290,10 +358,26 @@ Use the updateDealMemory tool to save important context, summaries, or facts abo
                   if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
                   blob = await response.blob();
                 } catch (fetchErr) {
-                  console.warn("Fetch failed, falling back to getBytes", fetchErr);
-                  // Fallback to getBytes with a 50MB limit (default is 1MB which causes retry-limit-exceeded for larger files)
-                  const arrayBuffer = await getBytes(storageRef, 50 * 1024 * 1024);
-                  blob = new Blob([arrayBuffer], { type: file.type });
+                  console.warn("Fetch failed, falling back to corsproxy.io", fetchErr);
+                  try {
+                    const proxyUrl = `https://corsproxy.io/?${encodeURIComponent(file.url)}`;
+                    const proxyResponse = await fetch(proxyUrl);
+                    if (!proxyResponse.ok) throw new Error(`Proxy HTTP error! status: ${proxyResponse.status}`);
+                    blob = await proxyResponse.blob();
+                  } catch (proxyErr) {
+                    console.warn("Proxy fetch failed, falling back to allorigins", proxyErr);
+                    try {
+                      const proxyUrl2 = `https://api.allorigins.win/raw?url=${encodeURIComponent(file.url)}`;
+                      const proxyResponse2 = await fetch(proxyUrl2);
+                      if (!proxyResponse2.ok) throw new Error(`Proxy 2 HTTP error! status: ${proxyResponse2.status}`);
+                      blob = await proxyResponse2.blob();
+                    } catch (proxyErr2) {
+                      console.warn("Proxy 2 fetch failed, falling back to getBytes", proxyErr2);
+                      // Fallback to getBytes with a 50MB limit (default is 1MB which causes retry-limit-exceeded for larger files)
+                      const arrayBuffer = await getBytes(storageRef, 50 * 1024 * 1024);
+                      blob = new Blob([arrayBuffer], { type: file.type });
+                    }
+                  }
                 }
                 
                 const reader = new FileReader();
@@ -464,7 +548,7 @@ Use the updateDealMemory tool to save important context, summaries, or facts abo
                     ? 'bg-red-50 text-[#CC0000]'
                     : 'bg-white text-black'
               }`}>
-                <div className="prose prose-sm dark:prose-invert max-w-none font-medium">
+                <div className="prose prose-base max-w-none font-medium leading-relaxed text-black prose-p:text-black prose-headings:text-black prose-strong:text-black prose-a:text-[#CC0000] prose-li:text-black">
                   <ReactMarkdown remarkPlugins={[remarkGfm]}>{msg.content}</ReactMarkdown>
                 </div>
                 {msg.groundingUrls && msg.groundingUrls.length > 0 && (
