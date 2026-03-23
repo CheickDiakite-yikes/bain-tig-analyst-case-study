@@ -1,0 +1,236 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // ===============================================================
+    // Assumed Data Model
+    // ===============================================================
+    //
+    // Collection: users
+    // Document ID: userId (matches auth.uid)
+    // Fields:
+    //   - email: string (required)
+    //   - displayName: string (optional)
+    //   - photoURL: string (optional)
+    //   - role: string (required, 'admin' or 'consultant')
+    //   - createdAt: string (required, date-time format)
+    //
+    // Collection: deals
+    // Document ID: auto-generated
+    // Fields:
+    //   - name: string (required)
+    //   - targetCompany: string (required)
+    //   - industry: string (optional)
+    //   - status: string (required, 'sourcing', 'diligence', 'closed', 'passed')
+    //   - ev: number (optional)
+    //   - createdBy: string (required)
+    //   - createdAt: string (required, date-time format)
+    //   - updatedAt: string (optional, date-time format)
+    //
+    // Collection: files
+    // Document ID: auto-generated
+    // Fields:
+    //   - dealId: string (required)
+    //   - name: string (required)
+    //   - type: string (required)
+    //   - size: number (required)
+    //   - url: string (required)
+    //   - uploadedBy: string (required)
+    //   - uploadedAt: string (required, date-time format)
+    //
+    // Collection: messages
+    // Document ID: auto-generated
+    // Fields:
+    //   - dealId: string (required)
+    //   - role: string (required, 'user', 'model', 'system')
+    //   - content: string (required)
+    //   - userId: string (optional)
+    //   - createdAt: string (required, date-time format)
+    //
+    // Collection: memos
+    // Document ID: auto-generated
+    // Fields:
+    //   - dealId: string (required)
+    //   - title: string (required)
+    //   - content: string (required)
+    //   - createdBy: string (required)
+    //   - createdAt: string (required, date-time format)
+    //
+    // ===============================================================
+
+    // ===============================================================
+    // Helper Functions
+    // ===============================================================
+    
+    function isAuthenticated() {
+      return request.auth != null;
+    }
+    
+    function isAdmin() {
+      return isAuthenticated() &&
+        (exists(/databases/$(database)/documents/users/$(request.auth.uid)) && 
+         get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'admin' ||
+          (request.auth.token.email == "zorovt18@gmail.com" && request.auth.token.email_verified == true));
+    }
+    
+    function isOwner(userId) {
+      return isAuthenticated() && request.auth.uid == userId;
+    }
+    
+    function hasRequiredFields(fields) {
+      return request.resource.data.keys().hasAll(fields);
+    }
+    
+    function hasOnlyAllowedFields(fields) {
+      return request.resource.data.keys().hasOnly(fields);
+    }
+    
+    function isValidDateString(dateStr) {
+      return dateStr is string &&
+        dateStr.matches("^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}.*Z?$");
+    }
+    
+    function isValidEmail(email) {
+      return email is string &&
+        email.matches("^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\\.[a-zA-Z]{2,}$");
+    }
+
+    // ===============================================================
+    // Domain Validators
+    // ===============================================================
+
+    function isValidUser(data) {
+      return hasRequiredFields(['email', 'role', 'createdAt']) &&
+             hasOnlyAllowedFields(['email', 'displayName', 'photoURL', 'role', 'createdAt']) &&
+             isValidEmail(data.email) &&
+             data.role in ['admin', 'consultant'] &&
+             isValidDateString(data.createdAt) &&
+             (!('displayName' in data) || data.displayName is string) &&
+             (!('photoURL' in data) || data.photoURL is string);
+    }
+    
+    function isValidDeal(data) {
+      return hasRequiredFields(['name', 'targetCompany', 'status', 'createdBy', 'createdAt']) &&
+             hasOnlyAllowedFields(['name', 'targetCompany', 'industry', 'status', 'ev', 'aiMemory', 'createdBy', 'createdAt', 'updatedAt']) &&
+             data.name is string && data.name.size() > 0 && data.name.size() < 100 &&
+             data.targetCompany is string && data.targetCompany.size() > 0 && data.targetCompany.size() < 100 &&
+             (!('industry' in data) || (data.industry is string && data.industry.size() < 100)) &&
+             data.status in ['sourcing', 'diligence', 'closed', 'passed'] &&
+             (!('ev' in data) || data.ev is number) &&
+             (!('aiMemory' in data) || (data.aiMemory is string && data.aiMemory.size() < 100000)) &&
+             data.createdBy is string && data.createdBy.size() > 0 && data.createdBy.size() < 100 &&
+             isValidDateString(data.createdAt) &&
+             (!('updatedAt' in data) || isValidDateString(data.updatedAt));
+    }
+    
+    function isValidFile(data) {
+      return hasRequiredFields(['dealId', 'name', 'type', 'size', 'url', 'uploadedBy', 'uploadedAt']) &&
+             hasOnlyAllowedFields(['dealId', 'name', 'type', 'size', 'url', 'uploadedBy', 'uploadedAt']) &&
+             data.dealId is string && data.dealId.size() > 0 && data.dealId.size() < 100 &&
+             data.name is string && data.name.size() > 0 && data.name.size() < 200 &&
+             data.type is string && data.type.size() > 0 && data.type.size() < 100 &&
+             data.size is number && data.size > 0 &&
+             data.url is string && data.url.size() > 0 && data.url.size() < 1000 &&
+             data.uploadedBy is string && data.uploadedBy.size() > 0 && data.uploadedBy.size() < 100 &&
+             isValidDateString(data.uploadedAt);
+    }
+    
+    function isValidMessage(data) {
+      return hasRequiredFields(['dealId', 'role', 'content', 'createdAt']) &&
+             hasOnlyAllowedFields(['dealId', 'role', 'content', 'userId', 'createdAt', 'groundingUrls']) &&
+             data.dealId is string && data.dealId.size() > 0 && data.dealId.size() < 100 &&
+             data.role in ['user', 'model', 'system'] &&
+             data.content is string && data.content.size() > 0 && data.content.size() < 100000 &&
+             (!('userId' in data) || (data.userId is string && data.userId.size() < 100)) &&
+             (!('groundingUrls' in data) || data.groundingUrls is list) &&
+             isValidDateString(data.createdAt);
+    }
+    
+    function isValidMemo(data) {
+      return hasRequiredFields(['dealId', 'title', 'content', 'createdBy', 'createdAt']) &&
+             hasOnlyAllowedFields(['dealId', 'title', 'content', 'createdBy', 'createdAt', 'updatedAt']) &&
+             data.dealId is string && data.dealId.size() > 0 && data.dealId.size() < 100 &&
+             data.title is string && data.title.size() > 0 && data.title.size() < 200 &&
+             data.content is string && data.content.size() > 0 && data.content.size() < 1000000 &&
+             data.createdBy is string && data.createdBy.size() > 0 && data.createdBy.size() < 100 &&
+             isValidDateString(data.createdAt) &&
+             (!('updatedAt' in data) || isValidDateString(data.updatedAt));
+    }
+
+    function isValidTask(data) {
+      return hasRequiredFields(['dealId', 'title', 'status', 'priority', 'createdBy', 'createdAt']) &&
+             hasOnlyAllowedFields(['dealId', 'title', 'description', 'status', 'priority', 'assignedTo', 'createdBy', 'createdAt', 'updatedAt']) &&
+             data.dealId is string && data.dealId.size() > 0 && data.dealId.size() < 100 &&
+             data.title is string && data.title.size() > 0 && data.title.size() < 200 &&
+             (!('description' in data) || (data.description is string && data.description.size() < 10000)) &&
+             data.status in ['todo', 'in-progress', 'done'] &&
+             data.priority in ['low', 'medium', 'high'] &&
+             (!('assignedTo' in data) || (data.assignedTo is string && data.assignedTo.size() < 100)) &&
+             data.createdBy is string && data.createdBy.size() > 0 && data.createdBy.size() < 100 &&
+             isValidDateString(data.createdAt) &&
+             (!('updatedAt' in data) || isValidDateString(data.updatedAt));
+    }
+
+    // ===============================================================
+    // Rules
+    // ===============================================================
+
+    match /users/{userId} {
+      allow read: if isAuthenticated();
+      allow create: if isAuthenticated() && isValidUser(request.resource.data) && 
+                    ((isOwner(userId) && request.resource.data.role == 'consultant') || isAdmin());
+      allow update: if isAuthenticated() && isValidUser(request.resource.data) && 
+                    ((isOwner(userId) && request.resource.data.role == resource.data.role) || isAdmin()) &&
+                    request.resource.data.email == resource.data.email &&
+                    request.resource.data.createdAt == resource.data.createdAt;
+      allow delete: if isAdmin();
+    }
+
+    match /deals/{dealId} {
+      allow read: if isAuthenticated();
+      allow create: if isAuthenticated() && isValidDeal(request.resource.data);
+      allow update: if isAuthenticated() && isValidDeal(request.resource.data) &&
+                    request.resource.data.createdBy == resource.data.createdBy &&
+                    request.resource.data.createdAt == resource.data.createdAt;
+      allow delete: if isAdmin();
+    }
+    
+    match /files/{fileId} {
+      allow read: if isAuthenticated();
+      allow create: if isAuthenticated() && isValidFile(request.resource.data);
+      allow update: if isAuthenticated() && isValidFile(request.resource.data) &&
+                    request.resource.data.dealId == resource.data.dealId &&
+                    request.resource.data.uploadedBy == resource.data.uploadedBy &&
+                    request.resource.data.uploadedAt == resource.data.uploadedAt;
+      allow delete: if isAuthenticated() && (request.auth.uid == resource.data.uploadedBy || isAdmin());
+    }
+    
+    match /messages/{messageId} {
+      allow read: if isAuthenticated();
+      allow create: if isAuthenticated() && isValidMessage(request.resource.data);
+      allow update: if isAuthenticated() && isValidMessage(request.resource.data) &&
+                    request.resource.data.dealId == resource.data.dealId &&
+                    request.resource.data.createdAt == resource.data.createdAt;
+      allow delete: if isAdmin();
+    }
+    
+    match /memos/{memoId} {
+      allow read: if isAuthenticated();
+      allow create: if isAuthenticated() && isValidMemo(request.resource.data);
+      allow update: if isAuthenticated() && isValidMemo(request.resource.data) &&
+                    request.resource.data.dealId == resource.data.dealId &&
+                    request.resource.data.createdBy == resource.data.createdBy &&
+                    request.resource.data.createdAt == resource.data.createdAt;
+      allow delete: if isAuthenticated() && (request.auth.uid == resource.data.createdBy || isAdmin());
+    }
+
+    match /tasks/{taskId} {
+      allow read: if isAuthenticated();
+      allow create: if isAuthenticated() && isValidTask(request.resource.data);
+      allow update: if isAuthenticated() && isValidTask(request.resource.data) &&
+                    request.resource.data.dealId == resource.data.dealId &&
+                    request.resource.data.createdBy == resource.data.createdBy &&
+                    request.resource.data.createdAt == resource.data.createdAt;
+      allow delete: if isAuthenticated() && (request.auth.uid == resource.data.createdBy || isAdmin());
+    }
+  }
+}

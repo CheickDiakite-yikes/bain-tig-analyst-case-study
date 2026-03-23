@@ -1,0 +1,50 @@
+@import "tailwindcss";
+@plugin "@tailwindcss/typography";
+
+@theme {
+  --color-background: #F4F4F0;
+  --color-foreground: #000000;
+  --color-card: #FFFFFF;
+  --color-card-foreground: #000000;
+  --color-popover: #FFFFFF;
+  --color-popover-foreground: #000000;
+  --color-primary: #CC0000;
+  --color-primary-foreground: #FFFFFF;
+  --color-secondary: #000000;
+  --color-secondary-foreground: #FFFFFF;
+  --color-muted: #E5E7EB;
+  --color-muted-foreground: #4B5563;
+  --color-accent: #F3F4F6;
+  --color-accent-foreground: #000000;
+  --color-destructive: #CC0000;
+  --color-destructive-foreground: #FFFFFF;
+  --color-border: #000000;
+  --color-input: #000000;
+  --color-ring: #000000;
+
+  --radius-lg: 0px;
+  --radius-md: 0px;
+  --radius-sm: 0px;
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+  body {
+    @apply bg-background text-foreground;
+    font-feature-settings: "rlig" 1, "calt" 1;
+  }
+}
+
+@layer utilities {
+  .brutal-shadow {
+    box-shadow: 4px 4px 0px 0px #000000;
+  }
+  .brutal-shadow-sm {
+    box-shadow: 2px 2px 0px 0px #000000;
+  }
+  .brutal-shadow-lg {
+    box-shadow: 8px 8px 0px 0px #000000;
+  }
+}
