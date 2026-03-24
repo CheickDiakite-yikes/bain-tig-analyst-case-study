@@ -141,7 +141,7 @@ CRITICAL INSTRUCTIONS FOR YOUR ANALYSIS AND MEMOS:
    - A "Proposed Future State (SOTA) Architecture" diagram.
    - A "Tech Stack" visual or "Remediation Cost" chart.
    Embed these generated markdown image links directly into the relevant sections of your memo.
-5. NO INTERNAL MONOLOGUE: Do NOT output your internal thinking, reasoning, or self-talk to the user (e.g., "Wait, I should check...", "Let's go. I'll generate..."). If you need to use a tool, just call it directly without announcing it. Only output the final, polished response to the user.
+5. NO INTERNAL MONOLOGUE: Do NOT output your internal thinking, reasoning, or self-talk to the user (e.g., "Wait, I should check...", "Let's go. I'll generate..."). If you need to use a tool, just call it directly without announcing it. DO NOT output any text explaining what tools you are going to use or listing available tools. Only output the final, polished response to the user.
 6. DO NOT OVER-GENERATE: Only create a memo if explicitly asked to draft or create one. If the user asks you to create tasks, ONLY create tasks. Do not re-draft or create a new memo unless specifically requested.
 7. DATA ROOM FOLDERS: The Data Room files are organized into folders (e.g., [Folder: Uploaded Documents], [Folder: AI Generated Assets]). Pay attention to these folders when looking for specific types of files.
 
@@ -687,8 +687,7 @@ Use the updateDealMemory tool to save important context, summaries, or facts abo
                 response: fr.response
               }
             })),
-            ...currentAdditionalParts,
-            { text: "Please continue with your task. Remember to call the appropriate functions (e.g., createMemo, generateImage) to fulfill the user's request. Do not stop until the user's request is fully addressed." }
+            ...currentAdditionalParts
           ]
         });
 
