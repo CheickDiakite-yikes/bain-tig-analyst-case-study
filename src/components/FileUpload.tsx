@@ -4,7 +4,7 @@ import { collection, addDoc, deleteDoc, doc } from 'firebase/firestore';
 import { ref, uploadBytes, getDownloadURL, deleteObject } from 'firebase/storage';
 import { db, storage } from '../firebase';
 import { User } from 'firebase/auth';
-import { FileText, UploadCloud, File, FileSpreadsheet, FileImage, Trash2, Download } from 'lucide-react';
+import { FileText, UploadCloud, File, FileSpreadsheet, FileImage, Trash2, Download, ChevronDown, ChevronRight, Folder } from 'lucide-react';
 import { Button } from './ui/Button';
 import { ImageViewerModal } from './ui/ImageViewerModal';
 
@@ -13,6 +13,11 @@ export default function FileUpload({ dealId, user, files }: { dealId: string, us
   const [error, setError] = useState('');
   const [fileToDelete, setFileToDelete] = useState<any>(null);
   const [viewingImage, setViewingImage] = useState<string | null>(null);
+  const [aiFolderOpen, setAiFolderOpen] = useState(false);
+  const [docsFolderOpen, setDocsFolderOpen] = useState(true);
+
+  const aiGeneratedFiles = files.filter(f => f.name.startsWith('AI_GENERATED_'));
+  const uploadedFiles = files.filter(f => !f.name.startsWith('AI_GENERATED_'));
 
   const confirmDelete = async () => {
     if (!fileToDelete) return;
@@ -96,6 +101,33 @@ export default function FileUpload({ dealId, user, files }: { dealId: string, us
     return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
   };
 
+  const renderFileCard = (file: any) => (
+    <div key={file.id} className="flex items-start gap-4 p-4 border-2 border-black bg-white shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] hover:translate-y-[2px] hover:translate-x-[2px] hover:shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] transition-all group relative">
+      {file.type.startsWith('image/') ? (
+        <div 
+          className="w-10 h-10 shrink-0 border-2 border-black overflow-hidden bg-gray-100 flex items-center justify-center cursor-pointer hover:opacity-80 transition-opacity"
+          onClick={() => setViewingImage(file.url)}
+        >
+          <img src={file.url} alt={file.name} className="w-full h-full object-cover" referrerPolicy="no-referrer" />
+        </div>
+      ) : (
+        getFileIcon(file.type)
+      )}
+      <div className="flex-1 min-w-0">
+        <p className="text-sm font-bold uppercase tracking-wider text-black truncate" title={file.name}>{file.name}</p>
+        <p className="text-xs font-bold uppercase tracking-wider text-gray-500 mt-1">{formatSize(file.size)} • {new Date(file.uploadedAt).toLocaleDateString()}</p>
+      </div>
+      <div className="flex flex-col gap-2 opacity-100 md:opacity-0 md:group-hover:opacity-100 transition-opacity">
+        <Button variant="ghost" size="icon" className="h-8 w-8 border-2 border-black shadow-[2px_2px_0px_0px_rgba(0,0,0,1)]" onClick={() => window.open(file.url, '_blank')}>
+          <Download className="w-4 h-4" />
+        </Button>
+        <Button variant="ghost" size="icon" className="h-8 w-8 border-2 border-[#CC0000] text-[#CC0000] shadow-[2px_2px_0px_0px_rgba(204,0,0,1)] hover:bg-red-50" onClick={(e) => { e.stopPropagation(); setFileToDelete(file); }}>
+          <Trash2 className="w-4 h-4" />
+        </Button>
+      </div>
+    </div>
+  );
+
   return (
     <div className="p-4 md:p-6 h-full flex flex-col space-y-4 md:space-y-6 overflow-y-auto bg-white">
       <div className="flex flex-col md:flex-row md:items-center justify-between border-b-2 border-black pb-4 gap-2 shrink-0">
@@ -129,39 +161,48 @@ export default function FileUpload({ dealId, user, files }: { dealId: string, us
       </div>
 
       <div className="flex-1 pb-4">
-        <h3 className="text-sm font-bold uppercase tracking-wider text-black mb-4">Uploaded Files ({files.length})</h3>
+        <h3 className="text-sm font-bold uppercase tracking-wider text-black mb-4">Data Room Contents ({files.length})</h3>
         {files.length === 0 ? (
           <div className="text-center py-8 font-bold uppercase tracking-wider text-gray-500 border-2 border-dashed border-black bg-white shadow-[4px_4px_0px_0px_rgba(0,0,0,1)]">
             No files uploaded yet.
           </div>
         ) : (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-            {files.map(file => (
-              <div key={file.id} className="flex items-start gap-4 p-4 border-2 border-black bg-white shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] hover:translate-y-[2px] hover:translate-x-[2px] hover:shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] transition-all group relative">
-                {file.type.startsWith('image/') ? (
-                  <div 
-                    className="w-10 h-10 shrink-0 border-2 border-black overflow-hidden bg-gray-100 flex items-center justify-center cursor-pointer hover:opacity-80 transition-opacity"
-                    onClick={() => setViewingImage(file.url)}
-                  >
-                    <img src={file.url} alt={file.name} className="w-full h-full object-cover" referrerPolicy="no-referrer" />
+          <div className="space-y-6">
+            {uploadedFiles.length > 0 && (
+              <div>
+                <button 
+                  onClick={() => setDocsFolderOpen(!docsFolderOpen)}
+                  className="flex items-center gap-2 w-full text-left font-bold uppercase tracking-wider text-black mb-3 hover:text-[#CC0000] transition-colors"
+                >
+                  {docsFolderOpen ? <ChevronDown className="w-5 h-5" /> : <ChevronRight className="w-5 h-5" />}
+                  <Folder className="w-5 h-5 text-black" />
+                  Uploaded Documents ({uploadedFiles.length})
+                </button>
+                {docsFolderOpen && (
+                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 ml-2 md:ml-7 pl-4 border-l-2 border-black/10">
+                    {uploadedFiles.map(renderFileCard)}
                   </div>
-                ) : (
-                  getFileIcon(file.type)
                 )}
-                <div className="flex-1 min-w-0">
-                  <p className="text-sm font-bold uppercase tracking-wider text-black truncate" title={file.name}>{file.name}</p>
-                  <p className="text-xs font-bold uppercase tracking-wider text-gray-500 mt-1">{formatSize(file.size)} • {new Date(file.uploadedAt).toLocaleDateString()}</p>
-                </div>
-                <div className="flex flex-col gap-2 opacity-100 md:opacity-0 md:group-hover:opacity-100 transition-opacity">
-                  <Button variant="ghost" size="icon" className="h-8 w-8 border-2 border-black shadow-[2px_2px_0px_0px_rgba(0,0,0,1)]" onClick={() => window.open(file.url, '_blank')}>
-                    <Download className="w-4 h-4" />
-                  </Button>
-                  <Button variant="ghost" size="icon" className="h-8 w-8 border-2 border-[#CC0000] text-[#CC0000] shadow-[2px_2px_0px_0px_rgba(204,0,0,1)] hover:bg-red-50" onClick={(e) => { e.stopPropagation(); setFileToDelete(file); }}>
-                    <Trash2 className="w-4 h-4" />
-                  </Button>
-                </div>
               </div>
-            ))}
+            )}
+
+            {aiGeneratedFiles.length > 0 && (
+              <div>
+                <button 
+                  onClick={() => setAiFolderOpen(!aiFolderOpen)}
+                  className="flex items-center gap-2 w-full text-left font-bold uppercase tracking-wider text-black mb-3 hover:text-[#CC0000] transition-colors"
+                >
+                  {aiFolderOpen ? <ChevronDown className="w-5 h-5" /> : <ChevronRight className="w-5 h-5" />}
+                  <Folder className="w-5 h-5 text-blue-500" />
+                  AI Generated Assets ({aiGeneratedFiles.length})
+                </button>
+                {aiFolderOpen && (
+                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 ml-2 md:ml-7 pl-4 border-l-2 border-black/10">
+                    {aiGeneratedFiles.map(renderFileCard)}
+                  </div>
+                )}
+              </div>
+            )}
           </div>
         )}
       </div>

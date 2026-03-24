@@ -105,9 +105,19 @@ export default function Chat({ deal, dealId, user, files, memos, tasks, onClose,
       });
 
       // Prepare context
-      const fileContext = files.length > 0 
-        ? `\n\nData Room Files Available:\n${files.map(f => `- ID: ${f.id}, Name: ${f.name} (${f.type})`).join('\n')}`
-        : '\n\nNo files currently in the Data Room.';
+      const aiGeneratedFiles = files.filter(f => f.name.startsWith('AI_GENERATED_'));
+      const uploadedFiles = files.filter(f => !f.name.startsWith('AI_GENERATED_'));
+
+      let fileContextStr = '\n\nData Room Files Available:';
+      if (uploadedFiles.length > 0) {
+        fileContextStr += `\n[Folder: Uploaded Documents]\n${uploadedFiles.map(f => `- ID: ${f.id}, Name: ${f.name} (${f.type})`).join('\n')}`;
+      }
+      if (aiGeneratedFiles.length > 0) {
+        fileContextStr += `\n[Folder: AI Generated Assets]\n${aiGeneratedFiles.map(f => `- ID: ${f.id}, Name: ${f.name} (${f.type})`).join('\n')}`;
+      }
+      if (files.length === 0) {
+        fileContextStr += '\nNo files currently in the Data Room.';
+      }
       
       const memoContext = memos && memos.length > 0
         ? `\n\nExisting Memos:\n${memos.map(m => `- ID: ${m.id}, Title: ${m.title}`).join('\n')}`
@@ -133,6 +143,7 @@ CRITICAL INSTRUCTIONS FOR YOUR ANALYSIS AND MEMOS:
    Embed these generated markdown image links directly into the relevant sections of your memo.
 5. NO INTERNAL MONOLOGUE: Do NOT output your internal thinking, reasoning, or self-talk to the user (e.g., "Wait, I should check...", "Let's go. I'll generate..."). If you need to use a tool, just call it directly without announcing it. Only output the final, polished response to the user.
 6. DO NOT OVER-GENERATE: Only create a memo if explicitly asked to draft or create one. If the user asks you to create tasks, ONLY create tasks. Do not re-draft or create a new memo unless specifically requested.
+7. DATA ROOM FOLDERS: The Data Room files are organized into folders (e.g., [Folder: Uploaded Documents], [Folder: AI Generated Assets]). Pay attention to these folders when looking for specific types of files.
 
 When asked to generate or draft a Tech Due Diligence (Tech DD) memo, you MUST use the following highly structured framework. Output the memo using these exact headers, pulling context from the Data Room files AND your deep online research:
 
@@ -185,7 +196,7 @@ When asked to generate or draft a Tech Due Diligence (Tech DD) memo, you MUST us
 If asked to generate or draft a memo, use the createMemo tool. If asked to update a memo, you MUST first use the readMemo tool to fetch its current content, and then use the updateMemo tool to apply the changes.
 If asked to create a task, use the createTask tool. If asked to update a task's status or priority, use the updateTask tool. If asked to delete a task, use the deleteTask tool.
 If asked to analyze, summarize, or extract data from a file in the Data Room, use the analyzeDataRoomFile tool.
-Use the updateDealMemory tool to save important context, summaries, or facts about this deal that you should remember across multiple interactions.${dealContext}${fileContext}${memoContext}${taskContext}`;
+Use the updateDealMemory tool to save important context, summaries, or facts about this deal that you should remember across multiple interactions.${dealContext}${fileContextStr}${memoContext}${taskContext}`;
 
       const modelName = thinkingMode ? 'gemini-3.1-pro-preview' : 'gemini-3-flash-preview';
 
@@ -362,7 +373,7 @@ Use the updateDealMemory tool to save important context, summaries, or facts abo
       let groundingUrls: string[] = [];
       let iterationCount = 0;
 
-      while (!isDone && iterationCount < 10) {
+      while (!isDone && iterationCount < 15) {
         iterationCount++;
         let currentFunctionCalls: any[] = [];
         const currentFunctionResponses: any[] = [];
@@ -526,10 +537,12 @@ Use the updateDealMemory tool to save important context, summaries, or facts abo
                 });
                 
                 let base64Image = '';
-                for (const part of imageResponse.candidates![0].content.parts) {
-                  if (part.inlineData) {
-                    base64Image = part.inlineData.data;
-                    break;
+                if (imageResponse.candidates && imageResponse.candidates.length > 0 && imageResponse.candidates[0].content?.parts) {
+                  for (const part of imageResponse.candidates[0].content.parts) {
+                    if (part.inlineData) {
+                      base64Image = part.inlineData.data;
+                      break;
+                    }
                   }
                 }
                 
@@ -619,7 +632,7 @@ Use the updateDealMemory tool to save important context, summaries, or facts abo
                   currentFunctionResponses.push({
                     name: call.name,
                     id: call.id,
-                    response: { result: `File content successfully retrieved and provided in the context.` }
+                    response: { result: `File content successfully retrieved and attached as an inline document in this message. Please read the attached document.` }
                   });
                   
                   currentAdditionalParts.push({ text: `Content of file ${file.name}:` });
@@ -674,7 +687,8 @@ Use the updateDealMemory tool to save important context, summaries, or facts abo
                 response: fr.response
               }
             })),
-            ...currentAdditionalParts
+            ...currentAdditionalParts,
+            { text: "Please continue with your task. Remember to call the appropriate functions (e.g., createMemo, generateImage) to fulfill the user's request. Do not stop until the user's request is fully addressed." }
           ]
         });
 
@@ -686,7 +700,7 @@ Use the updateDealMemory tool to save important context, summaries, or facts abo
             systemInstruction: systemInstruction,
             temperature: 0.4,
             maxOutputTokens: 65536,
-            tools: [{ googleSearch: {} }, { functionDeclarations: [createMemoFunction, readMemoFunction, updateMemoFunction, createTaskFunction, updateTaskFunction, deleteTaskFunction, analyzeDataRoomFileFunction, updateDealMemoryFunction, generateImageFunction] }],
+            tools: [{ googleSearch: {} }, { functionDeclarations: [createMemoFunction, readMemoFunction, updateMemoFunction, createTaskFunction, updateTaskFunction, deleteTaskFunction, analyzeDataRoomFileFunction, updateDealMemoryFunction, generateImageFunction, updateDealFunction] }],
             toolConfig: { includeServerSideToolInvocations: true },
             thinkingConfig: thinkingMode ? { thinkingLevel: ThinkingLevel.HIGH } : undefined
           }
