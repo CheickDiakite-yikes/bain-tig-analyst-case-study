@@ -475,7 +475,7 @@ Use the updateDealMemory tool to save important context, summaries, or facts abo
  id: call.id,
  response: { result: `Deal updated successfully with: ${JSON.stringify(updateData)}`}
 });
- systemMessage += `\n\n*Updated deal details: ${Object.keys(updateData).join(',')}*`;
+ 
 } else {
  currentFunctionResponses.push({
  name: call.name,
