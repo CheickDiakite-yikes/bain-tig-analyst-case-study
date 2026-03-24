@@ -19,6 +19,8 @@ const cleanText = (input: string) => {
   let cleaned = input.replace(/<\|?(thought|think)\b[\s\S]*?(?:\|>|<\/\|?(thought|think)\s*>)/gi, '');
   // Remove incomplete thought/think block at the end
   cleaned = cleaned.replace(/<\|?(thought|think)\b[\s\S]*$/i, '');
+  // Remove <|file_separator|> and similar tags
+  cleaned = cleaned.replace(/<\|?file_separator\|?>|\[file_separator\]/gi, '');
   return cleaned.trim();
 };
 
@@ -142,8 +144,9 @@ CRITICAL INSTRUCTIONS FOR YOUR ANALYSIS AND MEMOS:
    - A "Tech Stack" visual or "Remediation Cost" chart.
    Embed these generated markdown image links directly into the relevant sections of your memo.
 5. NO INTERNAL MONOLOGUE: Do NOT output your internal thinking, reasoning, or self-talk to the user (e.g., "Wait, I should check...", "Let's go. I'll generate..."). If you need to use a tool, just call it directly without announcing it. DO NOT output any text explaining what tools you are going to use or listing available tools. Only output the final, polished response to the user.
-6. DO NOT OVER-GENERATE: Only create a memo if explicitly asked to draft or create one. If the user asks you to create tasks, ONLY create tasks. Do not re-draft or create a new memo unless specifically requested.
-7. DATA ROOM FOLDERS: The Data Room files are organized into folders (e.g., [Folder: Uploaded Documents], [Folder: AI Generated Assets]). Pay attention to these folders when looking for specific types of files.
+6. IMMEDIATE ACTION: When asked to perform a task (like creating a memo, analyzing a file, or generating an image), DO NOT output conversational filler, summaries, or intermediate steps. Immediately call the necessary tools to complete the task. Only output text when the entire task is complete and you are providing the final result to the user.
+7. DO NOT OVER-GENERATE: Only create a memo if explicitly asked to draft or create one. If the user asks you to create tasks, ONLY create tasks. Do not re-draft or create a new memo unless specifically requested.
+8. DATA ROOM FOLDERS: The Data Room files are organized into folders (e.g., [Folder: Uploaded Documents], [Folder: AI Generated Assets]). Pay attention to these folders when looking for specific types of files.
 
 When asked to generate or draft a Tech Due Diligence (Tech DD) memo, you MUST use the following highly structured framework. Output the memo using these exact headers, pulling context from the Data Room files AND your deep online research:
 
@@ -403,7 +406,7 @@ Use the updateDealMemory tool to save important context, summaries, or facts abo
               const docRef = await addDoc(collection(db, 'memos'), {
                 dealId,
                 title: args.title,
-                content: args.content,
+                content: cleanText(args.content),
                 createdBy: user.uid,
                 createdAt: new Date().toISOString()
               });
@@ -447,7 +450,7 @@ Use the updateDealMemory tool to save important context, summaries, or facts abo
               const args = call.args as any;
               await updateDoc(doc(db, 'memos', args.memoId), {
                 title: args.title,
-                content: args.content,
+                content: cleanText(args.content),
                 updatedAt: new Date().toISOString()
               });
               currentFunctionResponses.push({
@@ -485,8 +488,8 @@ Use the updateDealMemory tool to save important context, summaries, or facts abo
               const args = call.args as any;
               const docRef = await addDoc(collection(db, 'tasks'), {
                 dealId,
-                title: args.title,
-                description: args.description || '',
+                title: cleanText(args.title),
+                description: args.description ? cleanText(args.description) : '',
                 status: 'todo',
                 priority: args.priority || 'medium',
                 assignedTo: args.assignedTo || '',
@@ -527,7 +530,7 @@ Use the updateDealMemory tool to save important context, summaries, or facts abo
                 const currentAi = new GoogleGenAI({ apiKey: (process.env.API_KEY || process.env.GEMINI_API_KEY) as string });
                 const imageResponse = await currentAi.models.generateContent({
                   model: 'gemini-3.1-flash-image-preview',
-                  contents: { parts: [{ text: args.prompt }] },
+                  contents: { parts: [{ text: cleanText(args.prompt) }] },
                   config: {
                     imageConfig: {
                       aspectRatio: args.aspectRatio || "1:1",
@@ -687,7 +690,8 @@ Use the updateDealMemory tool to save important context, summaries, or facts abo
                 response: fr.response
               }
             })),
-            ...currentAdditionalParts
+            ...currentAdditionalParts,
+            { text: "Function call complete. If you have not fully completed the user's request (e.g., creating a memo, generating images), immediately call the next required tool. Do not output conversational text until the entire task is finished." }
           ]
         });
 
