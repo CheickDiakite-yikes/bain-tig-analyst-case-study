@@ -7,6 +7,60 @@ import Login from './pages/Login';
 import Dashboard from './pages/Dashboard';
 import DealRoom from './pages/DealRoom';
 
+function ApiKeyGuard({ children }: { children: React.ReactNode }) {
+  const [hasKey, setHasKey] = useState<boolean | null>(null);
+
+  useEffect(() => {
+    const checkKey = async () => {
+      try {
+        const selected = await (window as any).aistudio?.hasSelectedApiKey();
+        setHasKey(!!selected);
+      } catch (e) {
+        setHasKey(false);
+      }
+    };
+    checkKey();
+  }, []);
+
+  const handleSelectKey = async () => {
+    try {
+      await (window as any).aistudio?.openSelectKey();
+      // Assume successful after triggering as per guidelines
+      setHasKey(true);
+    } catch (e) {
+      console.error(e);
+      if (e instanceof Error && e.message.includes("Requested entity was not found.")) {
+        setHasKey(false);
+      }
+    }
+  };
+
+  if (hasKey === null) return <div className="min-h-screen flex items-center justify-center bg-background text-foreground">Loading API Key Status...</div>;
+
+  if (!hasKey) {
+    return (
+      <div className="min-h-screen flex flex-col items-center justify-center bg-gray-50 p-4">
+        <div className="bg-white p-8 border-4 border-black shadow-[8px_8px_0px_0px_rgba(0,0,0,1)] max-w-md text-center">
+          <h1 className="text-2xl font-bold uppercase tracking-wider mb-4">API Key Required</h1>
+          <p className="mb-6 text-gray-600">
+            To generate high-quality images and charts for memos, you must select a paid Google Cloud project API key.
+            <br/><br/>
+            <a href="https://ai.google.dev/gemini-api/docs/billing" target="_blank" rel="noreferrer" className="text-blue-600 underline font-bold">Billing Documentation</a>
+          </p>
+          <button 
+            onClick={handleSelectKey}
+            className="w-full bg-black text-white font-bold uppercase tracking-wider py-3 border-2 border-transparent hover:bg-white hover:text-black hover:border-black transition-colors"
+          >
+            Select API Key
+          </button>
+        </div>
+      </div>
+    );
+  }
+
+  return <>{children}</>;
+}
+
 export default function App() {
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
@@ -24,14 +78,16 @@ export default function App() {
   }
 
   return (
-    <BrowserRouter>
-      <Routes>
-        <Route path="/login" element={!user ? <Login /> : <Navigate to="/" />} />
-        <Route element={user ? <Layout user={user} /> : <Navigate to="/login" />}>
-          <Route path="/" element={<Dashboard user={user} />} />
-          <Route path="/deals/:dealId" element={<DealRoom user={user} />} />
-        </Route>
-      </Routes>
-    </BrowserRouter>
+    <ApiKeyGuard>
+      <BrowserRouter>
+        <Routes>
+          <Route path="/login" element={!user ? <Login /> : <Navigate to="/" />} />
+          <Route element={user ? <Layout user={user} /> : <Navigate to="/login" />}>
+            <Route path="/" element={<Dashboard user={user} />} />
+            <Route path="/deals/:dealId" element={<DealRoom user={user} />} />
+          </Route>
+        </Routes>
+      </BrowserRouter>
+    </ApiKeyGuard>
   );
 }

@@ -72,7 +72,7 @@ export default function TaskModal({ dealId, user, onClose }: { dealId: string, u
             />
           </div>
           
-          <div className="grid grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div>
               <label className="block text-sm font-bold uppercase tracking-wider text-black mb-1">Priority</label>
               <select 
@@ -98,19 +98,19 @@ export default function TaskModal({ dealId, user, onClose }: { dealId: string, u
             </div>
           </div>
           
-          <div className="pt-4 flex justify-end gap-2">
+          <div className="pt-4 flex flex-col sm:flex-row justify-end gap-2">
             <Button 
               type="button" 
               variant="outline" 
               onClick={onClose}
-              className="border-2 border-black shadow-[2px_2px_0px_0px_rgba(0,0,0,1)]"
+              className="border-2 border-black shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] w-full sm:w-auto"
             >
               Cancel
             </Button>
             <Button 
               type="submit" 
               disabled={isSubmitting || !title.trim()}
-              className="bg-[#CC0000] text-white border-2 border-black shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] hover:translate-y-[2px] hover:translate-x-[2px] hover:shadow-[0px_0px_0px_0px_rgba(0,0,0,1)] transition-all"
+              className="bg-[#CC0000] text-white border-2 border-black shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] hover:translate-y-[2px] hover:translate-x-[2px] hover:shadow-[0px_0px_0px_0px_rgba(0,0,0,1)] transition-all w-full sm:w-auto"
             >
               {isSubmitting ? 'Creating...' : 'Create Task'}
             </Button>

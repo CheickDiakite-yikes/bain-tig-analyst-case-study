@@ -2,9 +2,9 @@ import { useState } from 'react';
 import { updateDoc, doc, deleteDoc } from 'firebase/firestore';
 import { db } from '../firebase';
 import { Button } from './ui/Button';
-import { Trash2, CheckSquare, Clock, AlertCircle } from 'lucide-react';
+import { Trash2, CheckSquare, Clock, AlertCircle, Sparkles } from 'lucide-react';
 
-export default function TaskBoard({ tasks, dealId }: { tasks: any[], dealId: string }) {
+export default function TaskBoard({ tasks, dealId, onAskAI }: { tasks: any[], dealId: string, onAskAI?: (task: any) => void }) {
   const [draggedTaskId, setDraggedTaskId] = useState<string | null>(null);
 
   const handleDragStart = (e: React.DragEvent, taskId: string) => {
@@ -107,6 +107,16 @@ export default function TaskBoard({ tasks, dealId }: { tasks: any[], dealId: str
                     </span>
                   )}
                 </div>
+                {onAskAI && task.status !== 'done' && (
+                  <Button 
+                    variant="outline" 
+                    size="sm" 
+                    className="mt-3 w-full border-2 border-black shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] text-[10px] h-7"
+                    onClick={(e) => { e.stopPropagation(); onAskAI(task); }}
+                  >
+                    <Sparkles className="w-3 h-3 mr-1" /> Ask AI to Complete
+                  </Button>
+                )}
               </div>
             ))}
           </div>
