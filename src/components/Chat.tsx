@@ -123,7 +123,7 @@ Your goal is to assist the consultant with analyzing tech stacks, evaluating sof
 CRITICAL INSTRUCTIONS FOR YOUR ANALYSIS AND MEMOS:
 1. ACT LIKE A BAIN CONSULTANT: Do not just summarize facts. You must provide strong, professional opinions, judgments, and strategic recommendations. Use the Minto Pyramid Principle (Answer First communication). Be highly analytical, authoritative, and MECE (Mutually Exclusive, Collectively Exhaustive).
 2. DEEP RESEARCH: You MUST use the googleSearch tool extensively to perform deep, current research online. Benchmark the target company's technology against industry standards, competitors, and current market trends. Do not rely solely on the provided documents; enrich your analysis with real-world data and context.
-3. EXTENSIVE DETAIL: Your analysis and memos MUST be extremely detailed, spanning several pages of deep, rigorous content. Break down complex technical concepts into business impact (e.g., how technical debt affects EBITDA or time-to-market). Provide State-of-the-Art (SOTA) technical software advice.
+3. EXTENSIVE DETAIL & LENGTH: Your analysis and memos MUST be extremely detailed, spanning several pages of deep, rigorous content. You MUST write at least 3-4 substantial paragraphs for EVERY section in the memo framework. Do not use brief bullet points as a substitute for deep paragraph-form analysis. Break down complex technical concepts into business impact (e.g., how technical debt affects EBITDA or time-to-market). Provide State-of-the-Art (SOTA) technical software advice.
 4. VISUAL EXCELLENCE (MULTIPLE IMAGES REQUIRED): You MUST use the generateImage tool MULTIPLE TIMES per report to create and embed relevant, high-quality images. Every memo MUST include at least:
    - A "Current State Architecture" diagram.
    - A "Proposed Future State (SOTA) Architecture" diagram.
@@ -346,7 +346,8 @@ Use the updateDealMemory tool to save important context, summaries, or facts abo
         contents: historyContents,
         config: {
           systemInstruction: systemInstruction,
-          temperature: 0.2,
+          temperature: 0.4,
+          maxOutputTokens: 65536,
           tools: [{ googleSearch: {} }, { functionDeclarations: [createMemoFunction, readMemoFunction, updateMemoFunction, createTaskFunction, updateTaskFunction, deleteTaskFunction, analyzeDataRoomFileFunction, updateDealMemoryFunction, generateImageFunction, updateDealFunction] }],
           toolConfig: { includeServerSideToolInvocations: true },
           thinkingConfig: thinkingMode ? { thinkingLevel: ThinkingLevel.HIGH } : undefined
@@ -681,7 +682,8 @@ Use the updateDealMemory tool to save important context, summaries, or facts abo
           contents: historyContents,
           config: {
             systemInstruction: systemInstruction,
-            temperature: 0.2,
+            temperature: 0.4,
+            maxOutputTokens: 65536,
             tools: [{ googleSearch: {} }, { functionDeclarations: [createMemoFunction, readMemoFunction, updateMemoFunction, createTaskFunction, updateTaskFunction, deleteTaskFunction, analyzeDataRoomFileFunction, updateDealMemoryFunction, generateImageFunction] }],
             toolConfig: { includeServerSideToolInvocations: true },
             thinkingConfig: thinkingMode ? { thinkingLevel: ThinkingLevel.HIGH } : undefined
