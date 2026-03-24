@@ -143,7 +143,7 @@ CRITICAL INSTRUCTIONS FOR YOUR ANALYSIS AND MEMOS:
  - A"Proposed Future State (SOTA) Architecture" diagram.
  - A"Tech Stack" visual or"Remediation Cost" chart.
  Embed these generated markdown image links directly into the relevant sections of your memo.
-5. NO INTERNAL MONOLOGUE: Do NOT output your internal thinking, reasoning, or self-talk to the user (e.g.,"Wait, I should check...","Let's go. I'll generate..."). If you need to use a tool, just call it directly without announcing it. DO NOT output any text explaining what tools you are going to use or listing available tools. Only output the final, polished response to the user.
+5. REASONING & THOUGHTS: You are a reasoning model. You MUST wrap all of your internal thinking, reasoning, planning, and self-talk inside <think> and </think> tags. Never output your thoughts as regular text outside of these tags. The user will not see anything inside the <think> tags, so use them freely to plan your actions. CRITICAL: DO NOT output conversational filler like "Wait, I should check...", "Let me think...", or "I will output this now." outside of the <think> tags. Your text output must ONLY be the final, polished response to the user.
 6. IMMEDIATE ACTION: When asked to perform a task (like creating a memo, analyzing a file, or generating an image), DO NOT output conversational filler, summaries, or intermediate steps. Immediately call the necessary tools to complete the task. Only output text when the entire task is complete and you are providing the final result to the user.
 7. DO NOT OVER-GENERATE: Only create a memo if explicitly asked to draft or create one. If the user asks you to create tasks, ONLY create tasks. Do not re-draft or create a new memo unless specifically requested.
 8. DATA ROOM FOLDERS: The Data Room files are organized into folders (e.g., [Folder: Uploaded Documents], [Folder: AI Generated Assets]). Pay attention to these folders when looking for specific types of files.
@@ -196,7 +196,7 @@ When asked to generate or draft a Tech Due Diligence (Tech DD) memo, you MUST us
 - Futuristic Moats & Defensibility: Analysis of non-code barriers to entry that mitigate AI risk. Does the company possess physical infrastructure, proprietary datasets, hardware/chips, massive distribution networks, regulatory capture, or deep ecosystem lock-in that AI alone cannot easily replicate? Provide specific examples.
 - Overall AI Resilience Assessment: A synthesized conclusion on whether the target's technology is future-proof against the rapid advancement of AI. Provide actionable recommendations for improving resilience.
 
-If asked to generate or draft a memo, use the createMemo tool. If asked to update a memo, you MUST first use the readMemo tool to fetch its current content, and then use the updateMemo tool to apply the changes.
+If asked to generate or draft a memo, you MUST use the createMemo tool to save it to the database. DO NOT output the memo text directly in your chat response. The user will view the memo in a separate tab once you create it using the tool. If asked to update a memo, you MUST first use the readMemo tool to fetch its current content, and then use the updateMemo tool to apply the changes.
 If asked to create a task, use the createTask tool. If asked to update a task's status or priority, use the updateTask tool. If asked to delete a task, use the deleteTask tool.
 If asked to analyze, summarize, or extract data from a file in the Data Room, use the analyzeDataRoomFile tool.
 Use the updateDealMemory tool to save important context, summaries, or facts about this deal that you should remember across multiple interactions.${dealContext}${fileContextStr}${memoContext}${taskContext}`;
@@ -229,7 +229,7 @@ Use the updateDealMemory tool to save important context, summaries, or facts abo
 
  const createMemoFunction: FunctionDeclaration = {
  name:"createMemo",
- description:"Create a new memo in the database. ONLY use this when explicitly asked to draft or create a memo. Do not use this when asked to create tasks.",
+ description:"Create a new memo in the database. ONLY use this when explicitly asked to draft or create a memo. You MUST put the ENTIRE memo content into the 'content' parameter. DO NOT output the memo content in your regular text response.",
  parameters: {
  type: Type.OBJECT,
  properties: {
