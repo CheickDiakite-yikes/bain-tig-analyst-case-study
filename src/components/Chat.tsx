@@ -7,6 +7,7 @@ import { GoogleGenAI, ThinkingLevel, FunctionDeclaration, Type } from '@google/g
 import { Send, BrainCircuit, Loader2, FileText, Sparkles, User as UserIcon, X, MessageSquare, Paperclip, XCircle, Image as ImageIcon } from 'lucide-react';
 import { Button } from './ui/Button';
 import { Input } from './ui/Input';
+import { ImageViewerModal } from './ui/ImageViewerModal';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 
@@ -28,6 +29,7 @@ export default function Chat({ deal, dealId, user, files, memos, tasks, onClose,
   const [thinkingMode, setThinkingMode] = useState(false);
   const [streamingResponse, setStreamingResponse] = useState('');
   const [loadingStage, setLoadingStage] = useState<string>('Thinking...');
+  const [viewingImage, setViewingImage] = useState<string | null>(null);
   const loadingIntervalRef = useRef<NodeJS.Timeout | null>(null);
   const [attachments, setAttachments] = useState<{name: string, mimeType: string, data: string}[]>([]);
   const messagesEndRef = useRef<HTMLDivElement>(null);
@@ -790,7 +792,20 @@ Use the updateDealMemory tool to save important context, summaries, or facts abo
                     : 'bg-white text-black'
               }`}>
                 <div className="prose prose-sm md:prose-base max-w-none font-medium leading-relaxed text-black prose-p:text-black prose-headings:text-black prose-strong:text-black prose-a:text-[#CC0000] prose-a:break-all prose-li:text-black break-words">
-                  <ReactMarkdown remarkPlugins={[remarkGfm]}>{msg.content}</ReactMarkdown>
+                  <ReactMarkdown 
+                    remarkPlugins={[remarkGfm]}
+                    components={{
+                      img: ({node, ...props}) => (
+                        <img 
+                          {...props} 
+                          className="cursor-pointer hover:opacity-80 transition-opacity border-2 border-black shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] my-4"
+                          onClick={() => setViewingImage(props.src || null)}
+                        />
+                      )
+                    }}
+                  >
+                    {msg.content}
+                  </ReactMarkdown>
                 </div>
                 {msg.groundingUrls && msg.groundingUrls.length > 0 && (
                   <div className="mt-4 pt-3 border-t-2 border-black">
@@ -823,7 +838,20 @@ Use the updateDealMemory tool to save important context, summaries, or facts abo
               </div>
               {streamingResponse && (
                 <div className="prose prose-sm md:prose-base max-w-none font-medium leading-relaxed text-black prose-p:text-black prose-headings:text-black prose-strong:text-black prose-a:text-[#CC0000] prose-a:break-all prose-li:text-black mt-2 pt-2 border-t-2 border-black/10 break-words">
-                  <ReactMarkdown remarkPlugins={[remarkGfm]}>{streamingResponse}</ReactMarkdown>
+                  <ReactMarkdown 
+                    remarkPlugins={[remarkGfm]}
+                    components={{
+                      img: ({node, ...props}) => (
+                        <img 
+                          {...props} 
+                          className="cursor-pointer hover:opacity-80 transition-opacity border-2 border-black shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] my-4"
+                          onClick={() => setViewingImage(props.src || null)}
+                        />
+                      )
+                    }}
+                  >
+                    {streamingResponse}
+                  </ReactMarkdown>
                 </div>
               )}
             </div>
@@ -882,6 +910,7 @@ Use the updateDealMemory tool to save important context, summaries, or facts abo
             </p>
           </div>
         </div>
+      <ImageViewerModal src={viewingImage} onClose={() => setViewingImage(null)} />
     </div>
   );
 }

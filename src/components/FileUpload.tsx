@@ -6,11 +6,13 @@ import { db, storage } from '../firebase';
 import { User } from 'firebase/auth';
 import { FileText, UploadCloud, File, FileSpreadsheet, FileImage, Trash2, Download } from 'lucide-react';
 import { Button } from './ui/Button';
+import { ImageViewerModal } from './ui/ImageViewerModal';
 
 export default function FileUpload({ dealId, user, files }: { dealId: string, user: User, files: any[] }) {
   const [uploading, setUploading] = useState(false);
   const [error, setError] = useState('');
   const [fileToDelete, setFileToDelete] = useState<any>(null);
+  const [viewingImage, setViewingImage] = useState<string | null>(null);
 
   const confirmDelete = async () => {
     if (!fileToDelete) return;
@@ -137,7 +139,10 @@ export default function FileUpload({ dealId, user, files }: { dealId: string, us
             {files.map(file => (
               <div key={file.id} className="flex items-start gap-4 p-4 border-2 border-black bg-white shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] hover:translate-y-[2px] hover:translate-x-[2px] hover:shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] transition-all group relative">
                 {file.type.startsWith('image/') ? (
-                  <div className="w-10 h-10 shrink-0 border-2 border-black overflow-hidden bg-gray-100 flex items-center justify-center">
+                  <div 
+                    className="w-10 h-10 shrink-0 border-2 border-black overflow-hidden bg-gray-100 flex items-center justify-center cursor-pointer hover:opacity-80 transition-opacity"
+                    onClick={() => setViewingImage(file.url)}
+                  >
                     <img src={file.url} alt={file.name} className="w-full h-full object-cover" referrerPolicy="no-referrer" />
                   </div>
                 ) : (
@@ -180,6 +185,7 @@ export default function FileUpload({ dealId, user, files }: { dealId: string, us
           </div>
         </div>
       )}
+      <ImageViewerModal src={viewingImage} onClose={() => setViewingImage(null)} />
     </div>
   );
 }

@@ -10,6 +10,7 @@ import Chat from '../components/Chat';
 import FileUpload from '../components/FileUpload';
 import TaskBoard from '../components/TaskBoard';
 import TaskModal from '../components/TaskModal';
+import { ImageViewerModal } from '../components/ui/ImageViewerModal';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 
@@ -422,6 +423,7 @@ function MemoEditor({ memo, onClose, onDelete }: { memo: any, onClose: () => voi
   const [content, setContent] = useState(memo?.content || '');
   const [isSaving, setIsSaving] = useState(false);
   const [viewMode, setViewMode] = useState<'edit' | 'preview'>('preview');
+  const [viewingImage, setViewingImage] = useState<string | null>(null);
 
   useEffect(() => {
     if (memo) {
@@ -481,10 +483,24 @@ function MemoEditor({ memo, onClose, onDelete }: { memo: any, onClose: () => voi
           />
         ) : (
           <div className="prose prose-sm max-w-none">
-            <ReactMarkdown remarkPlugins={[remarkGfm]}>{content}</ReactMarkdown>
+            <ReactMarkdown 
+              remarkPlugins={[remarkGfm]}
+              components={{
+                img: ({node, ...props}) => (
+                  <img 
+                    {...props} 
+                    className="cursor-pointer hover:opacity-80 transition-opacity border-2 border-black shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] my-4"
+                    onClick={() => setViewingImage(props.src || null)}
+                  />
+                )
+              }}
+            >
+              {content}
+            </ReactMarkdown>
           </div>
         )}
       </div>
+      <ImageViewerModal src={viewingImage} onClose={() => setViewingImage(null)} />
     </div>
   );
 }
