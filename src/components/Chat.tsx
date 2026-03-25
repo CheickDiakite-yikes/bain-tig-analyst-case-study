@@ -16,9 +16,9 @@ const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY});
 const cleanText = (input: string) => {
   if (!input) return input;
   // Remove completed thought/think blocks
-  let cleaned = input.replace(/<\|?(thought|think)\b[\s\S]*?(?:\|>|<\/\|?(thought|think)\s*>)/gi, '');
+  let cleaned = input.replace(/(?:<\|?(?:thought|think)\b|```(?:thought|think)\b)[\s\S]*?(?:\|>|<\/\|?(?:thought|think)\s*>|```)/gi, '');
   // Remove incomplete thought/think block at the end
-  cleaned = cleaned.replace(/<\|?(thought|think)\b[\s\S]*$/i, '');
+  cleaned = cleaned.replace(/(?:<\|?(?:thought|think)\b|```(?:thought|think)\b)[\s\S]*$/i, '');
   // Remove <|file_separator|> and similar tags
   cleaned = cleaned.replace(/<\|?file_separator\|?>|\[file_separator\]/gi, '');
   // Remove hallucinated tool instructions injected by the system
@@ -170,7 +170,7 @@ CRITICAL INSTRUCTIONS FOR YOUR ANALYSIS AND MEMOS:
 7. DO NOT OVER-GENERATE: Only create a memo if explicitly asked to draft or create one. If the user asks you to create tasks, ONLY create tasks. Do not re-draft or create a new memo unless specifically requested.
 8. DATA ROOM FOLDERS: The Data Room files are organized into folders (e.g., [Folder: Uploaded Documents], [Folder: AI Generated Assets]). Pay attention to these folders when looking for specific types of files.
 
-When asked to generate or draft a Tech Due Diligence (Tech DD) memo, you MUST use the following highly structured framework. Output the memo using these exact headers, pulling context from the Data Room files AND your deep online research:
+When asked to generate or draft a Tech Due Diligence (Tech DD) memo, you MUST use the createMemo tool. The content of the memo MUST follow this highly structured framework. Use these exact headers, pulling context from the Data Room files AND your deep online research:
 
 1. Executive Summary & Investment Thesis Alignment
 - The Bottom Line: A high-level assessment of whether the technology is an asset or a liability. Provide a nuanced view, not just a binary answer.
@@ -425,10 +425,11 @@ Use the updateDealMemory tool to save important context, summaries, or facts abo
  if (call.name ==='createMemo') {
  setLoadingStage('Creating memo...');
  const args = call.args as any;
+ try {
  const docRef = await addDoc(collection(db,'memos'), {
  dealId,
- title: args.title,
- content: cleanText(args.content),
+ title: args.title ? cleanText(args.title) || 'Untitled Memo' : 'Untitled Memo',
+ content: cleanText(args.content) || 'Empty memo content.',
  createdBy: user.uid,
  createdAt: new Date().toISOString()
 });
@@ -437,6 +438,9 @@ Use the updateDealMemory tool to save important context, summaries, or facts abo
  id: call.id,
  response: { result: `Memo created successfully with ID: ${docRef.id}`}
 });
+ } catch (err: any) {
+ currentFunctionResponses.push({ name: call.name, id: call.id, response: { error: `Failed to create memo: ${err.message}`} });
+ }
 } else if (call.name ==='readMemo') {
  setLoadingStage('Reading memo...');
  const args = call.args as any;
@@ -470,9 +474,10 @@ Use the updateDealMemory tool to save important context, summaries, or facts abo
 } else if (call.name ==='updateMemo') {
  setLoadingStage('Updating memo...');
  const args = call.args as any;
+ try {
  await updateDoc(doc(db,'memos', args.memoId), {
- title: args.title,
- content: cleanText(args.content),
+ title: args.title ? cleanText(args.title) || 'Untitled Memo' : 'Untitled Memo',
+ content: cleanText(args.content) || 'Empty memo content.',
  updatedAt: new Date().toISOString()
 });
  currentFunctionResponses.push({
@@ -480,12 +485,16 @@ Use the updateDealMemory tool to save important context, summaries, or facts abo
  id: call.id,
  response: { result: `Memo updated successfully.`}
 });
+ } catch (err: any) {
+ currentFunctionResponses.push({ name: call.name, id: call.id, response: { error: `Failed to update memo: ${err.message}`} });
+ }
 } else if (call.name ==='updateDeal') {
  setLoadingStage('Updating deal details...');
  const args = call.args as any;
+ try {
  const updateData: any = {};
- if (args.name !== undefined) updateData.name = args.name;
- if (args.targetCompany !== undefined) updateData.targetCompany = args.targetCompany;
+ if (args.name) updateData.name = args.name;
+ if (args.targetCompany) updateData.targetCompany = args.targetCompany;
  if (args.ev !== undefined) updateData.ev = args.ev;
  if (args.status !== undefined) updateData.status = args.status;
  
@@ -505,12 +514,16 @@ Use the updateDealMemory tool to save important context, summaries, or facts abo
  response: { result: `No updates provided.`}
 });
 }
+ } catch (err: any) {
+ currentFunctionResponses.push({ name: call.name, id: call.id, response: { error: `Failed to update deal: ${err.message}`} });
+ }
 } else if (call.name ==='createTask') {
  setLoadingStage('Creating task...');
  const args = call.args as any;
+ try {
  const docRef = await addDoc(collection(db,'tasks'), {
  dealId,
- title: cleanText(args.title),
+ title: cleanText(args.title) || 'Untitled Task',
  description: args.description ? cleanText(args.description) :'',
  status:'todo',
  priority: args.priority ||'medium',
@@ -523,9 +536,13 @@ Use the updateDealMemory tool to save important context, summaries, or facts abo
  id: call.id,
  response: { result: `Task created successfully with ID: ${docRef.id}`}
 });
+ } catch (err: any) {
+ currentFunctionResponses.push({ name: call.name, id: call.id, response: { error: `Failed to create task: ${err.message}`} });
+ }
 } else if (call.name ==='updateTask') {
  setLoadingStage('Updating task...');
  const args = call.args as any;
+ try {
  const updateData: any = { updatedAt: new Date().toISOString()};
  if (args.status) updateData.status = args.status;
  if (args.priority) updateData.priority = args.priority;
@@ -536,23 +553,31 @@ Use the updateDealMemory tool to save important context, summaries, or facts abo
  id: call.id,
  response: { result: `Task updated successfully.`}
 });
+ } catch (err: any) {
+ currentFunctionResponses.push({ name: call.name, id: call.id, response: { error: `Failed to update task: ${err.message}`} });
+ }
 } else if (call.name ==='deleteTask') {
  setLoadingStage('Deleting task...');
  const args = call.args as any;
+ try {
  await deleteDoc(doc(db,'tasks', args.taskId));
  currentFunctionResponses.push({
  name: call.name,
  id: call.id,
  response: { result: `Task deleted successfully.`}
 });
+ } catch (err: any) {
+ currentFunctionResponses.push({ name: call.name, id: call.id, response: { error: `Failed to delete task: ${err.message}`} });
+ }
 } else if (call.name ==='generateImage') {
  setLoadingStage('Generating image...');
  const args = call.args as any;
  try {
  const currentAi = new GoogleGenAI({ apiKey: (process.env.API_KEY || process.env.GEMINI_API_KEY) as string});
+ const promptText = cleanText(args.prompt) || "A professional, high-quality image, chart, or architecture diagram.";
  const imageResponse = await currentAi.models.generateContent({
  model:'gemini-3.1-flash-image-preview',
- contents: { parts: [{ text: cleanText(args.prompt)}]},
+ contents: { parts: [{ text: promptText}]},
  config: {
  imageConfig: {
  aspectRatio: args.aspectRatio ||"1:1",
@@ -610,6 +635,7 @@ Use the updateDealMemory tool to save important context, summaries, or facts abo
 }
 } else if (call.name ==='updateDealMemory') {
  const args = call.args as any;
+ try {
  await updateDoc(doc(db,'deals', dealId), {
  aiMemory: args.memory,
  updatedAt: new Date().toISOString()
@@ -619,6 +645,9 @@ Use the updateDealMemory tool to save important context, summaries, or facts abo
  id: call.id,
  response: { result: `Deal memory updated successfully.`}
 });
+ } catch (err: any) {
+ currentFunctionResponses.push({ name: call.name, id: call.id, response: { error: `Failed to update deal memory: ${err.message}`} });
+ }
 } else if (call.name ==='analyzeDataRoomFile') {
  setLoadingStage('Analyzing file...');
  const args = call.args as any;
