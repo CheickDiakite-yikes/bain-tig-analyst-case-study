@@ -109,6 +109,58 @@ export default function BlogPost() {
                 </p>
               </>
             )}
+
+            {slug === 'building-tiggy-case-study' && (
+              <>
+                <p className="lead text-2xl font-medium border-l-4 border-[#CC0000] pl-6 mb-8">
+                  Building an AI-native application for the high-stakes world of Private Equity and M&A is no small feat. In this retrospective case study, we pull back the curtain on the engineering journey behind TIGGY, analyzing our wins, friction points, and the core challenge of mastering the Gemini API.
+                </p>
+
+                <h2>1. What Went Right (The Wins)</h2>
+                <ul>
+                  <li><strong>Rapid Domain Adaptation:</strong> We successfully tailored the application to a highly specific, niche audience (Bain TIG professionals, Private Equity, M&A). The ability to instantly pivot the copywriting and feature set to include industry-specific jargon (VDRs, SOC 2, IC Memos, Tech Debt, Veracode scans) gave the app an immediate enterprise-grade feel.</li>
+                  <li><strong>Component Modularity & Refactoring:</strong> When expanding our marketing pages, we successfully executed a classic refactor: extracting the inline footer from the Landing Page into a reusable component. This kept the codebase DRY (Don't Repeat Yourself) and scalable.</li>
+                  <li><strong>Design System Consistency:</strong> We maintained a strict, high-contrast, professional UI (black, white, and TIGGY Red) across all new pages. Using modern utility-first CSS and robust iconography allowed us to build complex grids very quickly.</li>
+                </ul>
+
+                <h2>2. What We Struggled With (The Friction Points)</h2>
+                <p>
+                  No build session is without its hurdles. Here are the key friction points we encountered and overcame:
+                </p>
+                <ul>
+                  <li><strong>Ecosystem Churn & "Muscle Memory" Errors:</strong> During the Blogs page build, we initially imported our animation library from the legacy <code>framer-motion</code> package instead of the bleeding-edge <code>motion/react</code> package. This caused a fatal "Invalid hook call" error. <em>The Lesson:</em> AI assistants and engineers alike must rigorously check <code>package.json</code> before assuming import paths in the fast-moving React ecosystem.</li>
+                  <li><strong>Tooling Precision:</strong> During a refactor, we initially failed to replace code because our "Target Content" didn't perfectly match the exact whitespace/indentation of the existing file. This highlights that AI coding tools require surgical precision and exact string matching.</li>
+                </ul>
+
+                <h2>3. The Gemini API & Instruction Following (The Core Challenge)</h2>
+                <p>
+                  When building an AI app like TIGGY that relies on analyzing complex documents (codebases, financial models), getting the underlying LLM to do <em>exactly</em> what you want is the hardest part of the engineering process. Here is an analysis of why instruction following is a struggle and how we learn from it:
+                </p>
+                <ul>
+                  <li><strong>The "Chatty AI" Problem:</strong> When you ask an LLM to extract risks from a SOC 2 report, it often wants to add conversational filler ("Here is the analysis you requested..."). In a production app, you need raw, structured data to render in the UI. <em>The Fix:</em> We heavily rely on the new <code>@google/genai</code> SDK's <strong>Structured Outputs</strong>. By forcing the Gemini API to return strict JSON matching a predefined interface, we bypass the instruction-following drift and force deterministic data structures.</li>
+                  <li><strong>Context Window Overload vs. Needle in a Haystack:</strong> In M&A diligence, you are feeding the API massive documents. Sometimes, Gemini might struggle to follow a specific instruction (e.g., "Only list critical vulnerabilities") because the instruction gets drowned out by the sheer volume of the 100-page PDF context. <em>The Fix:</em> <strong>System Instructions</strong> are critical. Placing the persona ("You are a Bain TIG consultant") and the strict rules in the system prompt carries much more weight than putting them in the user prompt alongside the document text.</li>
+                  <li><strong>SDK Version Confusion:</strong> The Gemini ecosystem recently transitioned to a new unified SDK. A common struggle in AI-assisted coding is hallucinating old SDK methods instead of the new patterns. Strict adherence to the newest documentation is required to prevent runtime crashes.</li>
+                </ul>
+
+                <h2>4. Advanced Technical Learnings: Building for AI-Native</h2>
+                <p>
+                  Beyond the API itself, integrating an LLM into a React frontend requires a fundamental shift in how we approach state, types, and user experience. Here are the key technical lessons we learned:
+                </p>
+                <ul>
+                  <li><strong>Handling AI Latency (UX/UI):</strong> Unlike traditional CRUD apps where database queries take milliseconds, LLM generation can take several seconds—especially when analyzing a 100-page VDR document. We learned that UX is make-or-break here. Implementing skeleton loaders, streaming responses (where possible), and optimistic UI updates are mandatory to keep users engaged and prevent them from thinking the app has frozen during complex diligence queries.</li>
+                  <li><strong>End-to-End Type Safety:</strong> When relying on an LLM to generate JSON, TypeScript becomes your best friend and your strict enforcer. We learned to map the Gemini API's <code>responseSchema</code> directly to our frontend TypeScript interfaces. If the AI hallucinates a field or returns a string instead of an array, the type system catches it before it breaks the React render cycle.</li>
+                  <li><strong>Client-Side Security Posture:</strong> Building for Private Equity means handling highly confidential data. We had to ensure our frontend state management didn't inadvertently cache sensitive VDR data in local storage or expose it in client-side telemetry. Zero-Data-Retention starts at the UI layer.</li>
+                </ul>
+
+                <h2>5. The Final Takeaway: Prompt Engineering as Code</h2>
+                <p>
+                  Building TIGGY demonstrated that the actual React/UI development is largely a solved problem—we can spin up beautiful, responsive pages in seconds. 
+                </p>
+                <p>
+                  The <em>true</em> engineering challenge of 2026 is <strong>Prompt Engineering as Code</strong>. The success of TIGGY doesn't rely on how nice the dashboard looks; it relies on how strictly we can constrain the Gemini API to follow our exact analytical instructions without hallucinating, formatting incorrectly, or losing the thread during a massive document analysis. Moving forward, our focus remains on hardening those API calls with strict schemas, robust error handling, and clear system instructions.
+                </p>
+              </>
+            )}
           </div>
         </motion.div>
       </main>

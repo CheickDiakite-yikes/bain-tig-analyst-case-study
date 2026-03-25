@@ -11,6 +11,14 @@ export const blogPosts = [
     date: 'March 25, 2026',
     author: 'TIGGY Team',
     imageUrl: 'https://picsum.photos/seed/tiggy-blog-1/800/400?blur=1'
+  },
+  {
+    slug: 'building-tiggy-case-study',
+    title: 'Building TIGGY: A Case Study in AI-Native Engineering & Gemini API',
+    excerpt: 'A deep dive into our engineering journey. We explore the wins of rapid domain adaptation, the friction of bleeding-edge ecosystems, and the core challenge of mastering instruction following with the Gemini API.',
+    date: 'March 25, 2026',
+    author: 'TIGGY Engineering',
+    imageUrl: 'https://picsum.photos/seed/tiggy-engineering/800/400?blur=1'
   }
 ];
 
