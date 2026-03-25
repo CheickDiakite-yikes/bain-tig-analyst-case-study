@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { signInWithPopup, GoogleAuthProvider } from 'firebase/auth';
 import { auth, db } from '../firebase';
-import { doc, setDoc, getDoc } from 'firebase/firestore';
+import { doc, setDoc, getDoc, updateDoc } from 'firebase/firestore';
 import { BrainCircuit, ShieldCheck, ArrowRight } from 'lucide-react';
 import { motion } from 'motion/react';
 
@@ -22,13 +22,21 @@ export default function Login() {
       const userSnap = await getDoc(userRef);
       
       if (!userSnap.exists()) {
+        const tenantId = user.email?.split('@')[1] || 'unknown';
         await setDoc(userRef, {
           email: user.email,
           displayName: user.displayName,
           photoURL: user.photoURL,
           role: 'consultant', // Default role
+          tenantId: tenantId,
           createdAt: new Date().toISOString()
         });
+      } else {
+        const userData = userSnap.data();
+        if (!userData.tenantId) {
+          const tenantId = user.email?.split('@')[1] || 'unknown';
+          await updateDoc(userRef, { tenantId });
+        }
       }
     } catch (err: any) {
       console.error(err);

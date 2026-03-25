@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef} from'react';
 import { useParams, Link} from'react-router-dom';
-import { doc, onSnapshot, collection, query, orderBy, addDoc, updateDoc, deleteDoc} from'firebase/firestore';
+import { doc, onSnapshot, collection, query, orderBy, addDoc, updateDoc, deleteDoc, where} from'firebase/firestore';
 import { db} from'../firebase';
 import { User} from'firebase/auth';
 import { ArrowLeft, FileText, MessageSquare, FileUp, Download, Sparkles, BrainCircuit, CheckSquare, Edit, X, Trash2, MoreVertical} from'lucide-react';
@@ -42,6 +42,8 @@ export default function DealRoom({ user}: { user: User}) {
  useEffect(() => {
  if (!dealId) return;
  
+ const tenantId = user.email?.split('@')[1] || 'unknown';
+
  const unsubDeal = onSnapshot(doc(db,'deals', dealId), (doc) => {
  if (doc.exists()) {
  setDeal({ id: doc.id, ...doc.data()} as any);
@@ -50,17 +52,38 @@ export default function DealRoom({ user}: { user: User}) {
 
  const qFiles = query(collection(db,'files'), orderBy('uploadedAt','desc'));
  const unsubFiles = onSnapshot(qFiles, (snapshot) => {
- setFiles(snapshot.docs.map(d => ({ id: d.id, ...d.data()} as any)).filter(f => f.dealId === dealId));
+ const allFiles = snapshot.docs.map(d => ({ id: d.id, ...d.data()} as any)).filter(f => f.dealId === dealId);
+ const filteredFiles = allFiles.filter(f => !f.tenantId || f.tenantId === tenantId);
+ setFiles(filteredFiles);
+ filteredFiles.forEach(async (f) => {
+   if (!f.tenantId) {
+     try { await updateDoc(doc(db, 'files', f.id), { tenantId }); } catch(e) {}
+   }
+ });
 });
 
  const qMemos = query(collection(db,'memos'), orderBy('createdAt','desc'));
  const unsubMemos = onSnapshot(qMemos, (snapshot) => {
- setMemos(snapshot.docs.map(d => ({ id: d.id, ...d.data()} as any)).filter(m => m.dealId === dealId));
+ const allMemos = snapshot.docs.map(d => ({ id: d.id, ...d.data()} as any)).filter(m => m.dealId === dealId);
+ const filteredMemos = allMemos.filter(m => !m.tenantId || m.tenantId === tenantId);
+ setMemos(filteredMemos);
+ filteredMemos.forEach(async (m) => {
+   if (!m.tenantId) {
+     try { await updateDoc(doc(db, 'memos', m.id), { tenantId }); } catch(e) {}
+   }
+ });
 });
 
  const qTasks = query(collection(db,'tasks'), orderBy('createdAt','desc'));
  const unsubTasks = onSnapshot(qTasks, (snapshot) => {
- setTasks(snapshot.docs.map(d => ({ id: d.id, ...d.data()} as any)).filter(t => t.dealId === dealId));
+ const allTasks = snapshot.docs.map(d => ({ id: d.id, ...d.data()} as any)).filter(t => t.dealId === dealId);
+ const filteredTasks = allTasks.filter(t => !t.tenantId || t.tenantId === tenantId);
+ setTasks(filteredTasks);
+ filteredTasks.forEach(async (t) => {
+   if (!t.tenantId) {
+     try { await updateDoc(doc(db, 'tasks', t.id), { tenantId }); } catch(e) {}
+   }
+ });
 });
 
  return () => {
@@ -69,7 +92,7 @@ export default function DealRoom({ user}: { user: User}) {
  unsubMemos();
  unsubTasks();
 };
-}, [dealId]);
+}, [dealId, user.email, user.uid]);
 
  if (!deal) return <div className="animate-pulse text-muted-foreground">Loading deal room...</div>;
 

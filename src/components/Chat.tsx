@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef} from'react';
-import { collection, query, orderBy, onSnapshot, addDoc, doc, updateDoc, deleteDoc, serverTimestamp, getDoc} from'firebase/firestore';
+import { collection, query, orderBy, onSnapshot, addDoc, doc, updateDoc, deleteDoc, serverTimestamp, getDoc, where} from'firebase/firestore';
 import { ref, getBytes, uploadString, getDownloadURL} from'firebase/storage';
 import { db, storage} from'../firebase';
 import { User} from'firebase/auth';
@@ -58,6 +58,7 @@ export default function Chat({ deal, dealId, user, files, memos, tasks, onClose,
  const [attachments, setAttachments] = useState<{name: string, mimeType: string, data: string}[]>([]);
  const messagesEndRef = useRef<HTMLDivElement>(null);
  const fileInputRef = useRef<HTMLInputElement>(null);
+ const tenantId = user.email?.split('@')[1] || 'unknown';
 
  useEffect(() => {
  if (initialInput) {
@@ -68,12 +69,19 @@ export default function Chat({ deal, dealId, user, files, memos, tasks, onClose,
  useEffect(() => {
  const q = query(collection(db,'messages'), orderBy('createdAt','asc'));
  const unsubscribe = onSnapshot(q, (snapshot) => {
- const msgs = snapshot.docs.map(d => ({ id: d.id, ...d.data()} as any)).filter(m => m.dealId === dealId);
- setMessages(msgs);
+ const allMsgs = snapshot.docs.map(d => ({ id: d.id, ...d.data()} as any)).filter(m => m.dealId === dealId);
+ const filteredMsgs = allMsgs.filter(m => !m.tenantId || m.tenantId === tenantId);
+ setMessages(filteredMsgs);
  setTimeout(() => messagesEndRef.current?.scrollIntoView({ behavior:'smooth'}), 100);
+ 
+ filteredMsgs.forEach(async (m) => {
+   if (!m.tenantId) {
+     try { await updateDoc(doc(db, 'messages', m.id), { tenantId }); } catch(e) {}
+   }
+ });
 });
  return () => unsubscribe();
-}, [dealId]);
+}, [dealId, user.email, user.uid, tenantId]);
 
  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
  const selectedFiles = Array.from(e.target.files || []);
@@ -125,6 +133,7 @@ export default function Chat({ deal, dealId, user, files, memos, tasks, onClose,
  role:'user',
  content: displayContent,
  userId: user.uid,
+ tenantId: tenantId,
  createdAt: new Date().toISOString()
 });
 
@@ -431,6 +440,7 @@ Use the updateDealMemory tool to save important context, summaries, or facts abo
  dealId,
  title: args.title ? cleanText(args.title) || 'Untitled Memo' : 'Untitled Memo',
  content: cleanText(args.content) || 'Empty memo content.',
+ tenantId: tenantId,
  createdBy: user.uid,
  createdAt: new Date().toISOString()
 });
@@ -529,6 +539,7 @@ Use the updateDealMemory tool to save important context, summaries, or facts abo
  status:'todo',
  priority: args.priority ||'medium',
  assignedTo: args.assignedTo ||'',
+ tenantId: tenantId,
  createdBy: user.uid,
  createdAt: new Date().toISOString()
 });
@@ -610,6 +621,7 @@ Use the updateDealMemory tool to save important context, summaries, or facts abo
  type:'image/png',
  size: Math.round((base64Image.length * 3) / 4),
  url: downloadUrl,
+ tenantId: tenantId,
  uploadedBy:'AI Analyst',
  uploadedAt: new Date().toISOString()
 });
@@ -776,6 +788,7 @@ if (fullText && !fullText.endsWith('\n') && !fullText.endsWith(' ')) {
  dealId,
  role:'model',
  content: responseText,
+ tenantId: tenantId,
  createdAt: new Date().toISOString()
 };
  
@@ -791,6 +804,7 @@ if (fullText && !fullText.endsWith('\n') && !fullText.endsWith(' ')) {
  dealId,
  role:'system',
  content: `Error: ${error.message}`,
+ tenantId: tenantId,
  createdAt: new Date().toISOString()
 });
 } finally {

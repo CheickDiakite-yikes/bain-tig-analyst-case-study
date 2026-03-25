@@ -19,12 +19,14 @@ export default function TaskModal({ dealId, user, onClose}: { dealId: string, us
  
  setIsSubmitting(true);
  try {
+ const tenantId = user.email?.split('@')[1] || 'unknown';
  await addDoc(collection(db,'tasks'), {
  dealId,
  title: title.trim(),
  description: description.trim(),
  status:'todo',
  priority,
+ tenantId: tenantId,
  assignedTo: assignedTo.trim() ||'Unassigned',
  createdBy: user.uid,
  createdAt: new Date().toISOString(),

@@ -1,5 +1,5 @@
 import { useState, useEffect} from'react';
-import { collection, onSnapshot, query, orderBy, addDoc, serverTimestamp} from'firebase/firestore';
+import { collection, onSnapshot, query, orderBy, addDoc, serverTimestamp, where, updateDoc, doc} from'firebase/firestore';
 import { db} from'../firebase';
 import { User} from'firebase/auth';
 import { Link, useNavigate} from'react-router-dom';
@@ -20,14 +20,29 @@ export default function Dashboard({ user}: { user: User}) {
  const navigate = useNavigate();
 
  useEffect(() => {
+ const tenantId = user.email?.split('@')[1] || 'unknown';
  const q = query(collection(db,'deals'), orderBy('createdAt','desc'));
  const unsubscribe = onSnapshot(q, (snapshot) => {
  const dealsData = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data()}));
- setDeals(dealsData);
+ 
+ // Filter in memory for multi-tenancy + legacy
+ const filteredDeals = dealsData.filter((d: any) => !d.tenantId || d.tenantId === tenantId);
+ setDeals(filteredDeals);
  setLoading(false);
+
+ // Auto-migrate legacy deals
+ filteredDeals.forEach(async (d: any) => {
+   if (!d.tenantId) {
+     try {
+       await updateDoc(doc(db, 'deals', d.id), { tenantId });
+     } catch (err) {
+       console.error("Migration error:", err);
+     }
+   }
+ });
 });
  return () => unsubscribe();
-}, []);
+}, [user.email, user.uid]);
 
  const handleCreateDeal = async (e: React.FormEvent) => {
  e.preventDefault();
@@ -35,11 +50,13 @@ export default function Dashboard({ user}: { user: User}) {
  
  setIsCreating(true);
  try {
+ const tenantId = user.email?.split('@')[1] || 'unknown';
  const docRef = await addDoc(collection(db,'deals'), {
  name: newDealName,
  targetCompany: newDealTarget,
  status:'sourcing',
  ev: newDealEV ? parseFloat(newDealEV) : 0,
+ tenantId: tenantId,
  createdBy: user.uid,
  createdAt: new Date().toISOString(),
  updatedAt: new Date().toISOString()

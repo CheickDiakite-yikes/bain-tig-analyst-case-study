@@ -9,9 +9,10 @@
         "displayName": { "type": "string" },
         "photoURL": { "type": "string" },
         "role": { "type": "string", "enum": ["admin", "consultant"] },
+        "tenantId": { "type": "string", "description": "The firm's domain (e.g., bain.com)" },
         "createdAt": { "type": "string", "format": "date-time" }
       },
-      "required": ["email", "role", "createdAt"]
+      "required": ["email", "role", "tenantId", "createdAt"]
     },
     "Deal": {
       "title": "Deal",
@@ -24,11 +25,12 @@
         "status": { "type": "string", "enum": ["sourcing", "diligence", "closed", "passed"] },
         "ev": { "type": "number", "description": "Enterprise Value in millions" },
         "aiMemory": { "type": "string", "description": "Persistent memory context for the AI analyst" },
+        "tenantId": { "type": "string", "description": "The firm's domain" },
         "createdBy": { "type": "string" },
         "createdAt": { "type": "string", "format": "date-time" },
         "updatedAt": { "type": "string", "format": "date-time" }
       },
-      "required": ["name", "targetCompany", "status", "createdBy", "createdAt"]
+      "required": ["name", "targetCompany", "status", "tenantId", "createdBy", "createdAt"]
     },
     "File": {
       "title": "File",
@@ -40,10 +42,11 @@
         "type": { "type": "string" },
         "size": { "type": "number" },
         "url": { "type": "string" },
+        "tenantId": { "type": "string", "description": "The firm's domain" },
         "uploadedBy": { "type": "string" },
         "uploadedAt": { "type": "string", "format": "date-time" }
       },
-      "required": ["dealId", "name", "type", "size", "url", "uploadedBy", "uploadedAt"]
+      "required": ["dealId", "name", "type", "size", "url", "tenantId", "uploadedBy", "uploadedAt"]
     },
     "Message": {
       "title": "Message",
@@ -54,9 +57,10 @@
         "role": { "type": "string", "enum": ["user", "model", "system"] },
         "content": { "type": "string" },
         "userId": { "type": "string" },
+        "tenantId": { "type": "string", "description": "The firm's domain" },
         "createdAt": { "type": "string", "format": "date-time" }
       },
-      "required": ["dealId", "role", "content", "createdAt"]
+      "required": ["dealId", "role", "content", "tenantId", "createdAt"]
     },
     "Memo": {
       "title": "Memo",
@@ -66,10 +70,11 @@
         "dealId": { "type": "string" },
         "title": { "type": "string" },
         "content": { "type": "string" },
+        "tenantId": { "type": "string", "description": "The firm's domain" },
         "createdBy": { "type": "string" },
         "createdAt": { "type": "string", "format": "date-time" }
       },
-      "required": ["dealId", "title", "content", "createdBy", "createdAt"]
+      "required": ["dealId", "title", "content", "tenantId", "createdBy", "createdAt"]
     },
     "Task": {
       "title": "Task",
@@ -82,11 +87,12 @@
         "status": { "type": "string", "enum": ["todo", "in-progress", "done"] },
         "priority": { "type": "string", "enum": ["low", "medium", "high"] },
         "assignedTo": { "type": "string" },
+        "tenantId": { "type": "string", "description": "The firm's domain" },
         "createdBy": { "type": "string" },
         "createdAt": { "type": "string", "format": "date-time" },
         "updatedAt": { "type": "string", "format": "date-time" }
       },
-      "required": ["dealId", "title", "status", "priority", "createdBy", "createdAt"]
+      "required": ["dealId", "title", "status", "priority", "tenantId", "createdBy", "createdAt"]
     }
   },
   "firestore": {

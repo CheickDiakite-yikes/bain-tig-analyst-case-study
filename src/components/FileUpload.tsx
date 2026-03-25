@@ -66,12 +66,14 @@ export default function FileUpload({ dealId, user, files}: { dealId: string, use
  throw new Error(`Storage upload failed: ${storageErr.message}`);
 }
 
+ const tenantId = user.email?.split('@')[1] || 'unknown';
  await addDoc(collection(db,'files'), {
  dealId,
  name: file.name,
  type: file.type ||'application/octet-stream',
  size: file.size,
  url: url,
+ tenantId: tenantId,
  uploadedBy: user.uid,
  uploadedAt: new Date().toISOString()
 });
