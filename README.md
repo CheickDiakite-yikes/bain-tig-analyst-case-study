@@ -2,140 +2,186 @@
 
 ![Nexus Banner](https://picsum.photos/seed/nexus-banner/1200/300?blur=2)
 
-**Nexus** is a highly secure, multi-tenant Private Equity and M&A Deal Management platform. Built for top-tier consulting firms and investment banks, it combines real-time collaboration, secure document management, and a context-aware AI Copilot powered by Google's Gemini to accelerate the due diligence phase.
+**Nexus** is a highly secure, multi-tenant Private Equity and M&A Deal Management platform. Built for top-tier consulting firms and investment banks, it combines real-time collaboration, secure document management, and a context-aware AI Copilot powered by Google's Gemini 3.1 Pro to accelerate the due diligence phase.
 
 ---
 
-## ✨ Key Features
+## 🏗️ Detailed System Architecture
 
-*   **🏢 Strict Multi-Tenant Architecture:** Data is strictly isolated at the database level using domain-based tenant IDs (e.g., `@bain.com` users can never access `@mckinsey.com` data).
-*   **🤖 AI-Powered Deal Copilot:** Integrated with Google Gemini 3.1 Pro to analyze data room files, draft investment memos, and answer complex questions about target companies.
-*   **📊 Deal Pipeline Management:** Kanban-style tracking of deals through Sourcing, Diligence, Closed, and Passed phases.
-*   **🔐 Enterprise-Grade Security:** Robust Firestore Security Rules enforcing Role-Based Access Control (RBAC) and tenant isolation.
-*   **⚡ Real-Time Collaboration:** Live updates for tasks, memos, and files using Firestore's real-time snapshot listeners.
-*   **🔄 Auto-Migration Engine:** Seamlessly upgrades legacy data to the new multi-tenant architecture without user intervention or downtime.
-
----
-
-## 🏗️ System Architecture
-
-The application follows a modern, serverless architecture utilizing Firebase for backend services and Google Gen AI for intelligent features.
+The application follows a modern, serverless, event-driven architecture utilizing Firebase for real-time backend services and Google Gen AI for intelligent, agentic features.
 
 ```text
-+-----------------------------------------------------------------------+
-|                           CLIENT APPLICATION                          |
-|         (React 18 + Vite + Tailwind CSS + shadcn/ui + motion)         |
-|                                                                       |
-|  [ Dashboard ]  [ Deal Room ]  [ AI Chat ]  [ Data Room ]  [ Tasks ]  |
-+-----------------------------------+-----------------------------------+
-                                    |
-                                    | (Real-time WebSockets & REST)
-                                    v
-+-----------------------------------------------------------------------+
-|                      FIREBASE AUTHENTICATION                          |
-|             (Google OAuth -> Extracts Domain for Tenant ID)           |
-+-----------------------------------+-----------------------------------+
-                                    |
-                                    | (Secure JWT + Tenant ID)
-                                    v
-+-----------------------------------------------------------------------+
-|                    FIRESTORE DATABASE (NoSQL)                         |
-|                                                                       |
-|  +-------------------------+       +-------------------------+        |
-|  | Tenant A (e.g. bain.com)|       | Tenant B (e.g. mck.com) |        |
-|  |-------------------------|       |-------------------------|        |
-|  | - Users                 |       | - Users                 |        |
-|  | - Deals                 |       | - Deals                 |        |
-|  | - Files                 |       | - Files                 |        |
-|  | - Memos                 |       | - Memos                 |        |
-|  | - Tasks                 |       | - Tasks                 |        |
-|  | - Messages              |       | - Messages              |        |
-|  +-------------------------+       +-------------------------+        |
-|                                                                       |
-|      [ SECURITY LAYER: Strict Domain-Based Isolation Rules ]          |
-+-----------------------------------+-----------------------------------+
-                                    |
-                                    | (Context & Prompts)
-                                    v
-+-----------------------------------------------------------------------+
-|                       GOOGLE GEMINI AI API                            |
-|    (Context-Aware Deal Analysis, Memo Generation, Data Extraction)    |
-+-----------------------------------------------------------------------+
++-----------------------------------------------------------------------------------+
+|                               CLIENT APPLICATION                                  |
+|               (React 18 + Vite + Tailwind CSS + shadcn/ui + motion)               |
+|                                                                                   |
+|  +----------------+  +----------------+  +----------------+  +-----------------+  |
+|  |  Auth Context  |  |   Deal State   |  |   Chat State   |  |  Real-time UI   |  |
+|  +-------+--------+  +-------+--------+  +-------+--------+  +--------+--------+  |
+|          |                   |                   |                    ^           |
++----------|-------------------|-------------------|--------------------|-----------+
+           | (OAuth)           | (CRUD)            | (Prompt/Tools)     | (onSnapshot)
+           v                   v                   v                    |
++-------------------+ +---------------------------------------+         |
+|   FIREBASE AUTH   | |           FIRESTORE (NoSQL)           |---------+
+| (Google Provider) | |                                       |
+| Extracts Domain   | | +-------+ +-------+ +-------+ +-----+ |
+| for Tenant ID     | | | Users | | Deals | | Memos | | ... | |
++---------+---------+ | +-------+ +-------+ +-------+ +-----+ |
+          |           |                                       |
+          | (Token)   | [ SECURITY LAYER: Firestore Rules ]   |
+          v           +--------------------+------------------+
++-------------------+                      | (Context & History)
+|   RBAC & TENANT   |                      v
+|   ISOLATION       | +---------------------------------------+
+|   ENFORCEMENT     | |          GOOGLE GEMINI AI API         |
++-------------------+ |  (Gemini 3.1 Pro Preview + Tooling)   |
+                      |  - Function Calling (Memos, Tasks)    |
+                      |  - Grounding (Google Search)          |
+                      |  - Multimodal Analysis                |
+                      +---------------------------------------+
 ```
 
 ---
 
-## 🛡️ Security & Compliance
+## 🧠 Core Technical Implementations
 
-Security is the foundational pillar of Nexus, designed to meet the rigorous standards of financial institutions (ISO 27001, SOC 2).
+### 1. Agentic AI Copilot (Gemini 3.1 Pro)
+The AI integration goes beyond simple text generation. It acts as an autonomous agent within the deal room using **Function Calling (Tools)**.
+*   **Tool Invocations:** The AI is equipped with `FunctionDeclaration` objects allowing it to execute backend operations directly from the chat interface. Tools include `createMemoFunction`, `readMemoFunction`, `updateTaskFunction`, `analyzeDataRoomFileFunction`, and `updateDealMemoryFunction`.
+*   **Context Window Management:** The chat component fetches the entire `messages` collection scoped to the specific `dealId` and formats it into a continuous conversation history for the Gemini model, ensuring deep contextual awareness of the deal's diligence phase.
+*   **Grounding:** Utilizes Google Search grounding to pull in real-time market data and news regarding target companies.
 
-### 1. Multi-Tenancy & Data Isolation
-Every document in the database is tagged with a `tenantId` derived from the user's authenticated email domain. Firestore Security Rules physically block cross-tenant reads and writes.
+### 2. Zero-Downtime Multi-Tenant Migration Engine
+To support enterprise scaling, the app employs a strict domain-based multi-tenant architecture. To handle legacy data without downtime or manual database scripts, a **Client-Side Auto-Migration Engine** is implemented:
+*   **In-Memory Filtering:** The client fetches data ordered by creation date and filters it in-memory (`!d.tenantId || d.tenantId === tenantId`) to ensure legacy data remains visible to the original creators.
+*   **Background Upgrades:** As legacy data is loaded into the UI, a background `useEffect` process iterates through documents missing a `tenantId` and executes an `updateDoc` to stamp them with the user's current tenant ID, seamlessly upgrading the database schema in real-time.
+
+### 3. Real-Time Reactivity (`onSnapshot`)
+The application relies heavily on Firebase's WebSocket-based `onSnapshot` listeners rather than traditional REST polling.
+*   When a user opens a Deal Room, multiple listeners are attached to `files`, `memos`, `tasks`, and `messages` collections.
+*   Any mutation (from the user, a collaborator, or the AI Copilot) instantly triggers a React state update, providing a synchronous multiplayer experience.
+
+---
+
+## 🛡️ Advanced Security & Compliance
+
+Security is enforced at the database level using complex Firestore Security Rules, ensuring compliance with financial institution standards (SOC 2, ISO 27001).
+
+### Strict Tenant Isolation & Legacy Support
+Rules dynamically check the user's JWT token to extract their email domain and enforce tenant boundaries, while safely allowing the migration of legacy data:
 
 ```javascript
-// Example of our strict tenant isolation rule
-function isSameTenant(tenantId) {
-  return isAuthenticated() && 
-         request.auth.token.email != null && 
-         tenantId == request.auth.token.email.split('@')[1];
+function getTenantId() {
+  return request.auth.token.email.split('@')[1];
+}
+
+function isLegacyOrSameTenant(resourceData) {
+  // Allows access if the document belongs to the user's firm, 
+  // OR if it's a legacy document pending auto-migration.
+  return isAuthenticated() && (!('tenantId' in resourceData) || resourceData.tenantId == getTenantId());
 }
 ```
 
-### 2. Role-Based Access Control (RBAC)
-*   **Consultants:** Can create, read, and update deals, files, and tasks within their firm's tenant.
-*   **Admins:** Have elevated privileges to delete records and manage firm-wide settings. Users cannot self-escalate to Admin status.
+### Immutable Audit Trails & Schema Validation
+Every collection enforces strict schema validation and prevents tampering with audit fields (`createdAt`, `createdBy`).
 
-### 3. Immutable Audit Trails
-Critical fields such as `createdAt`, `createdBy`, and `uploadedBy` are locked at the database level. Once a record is created, these fields cannot be tampered with, ensuring a reliable audit trail for compliance.
-
-### 4. Schema Validation
-Firestore rules enforce strict schema validation. Documents cannot be saved if they contain unexpected fields, preventing NoSQL injection and schema pollution.
-
----
-
-## 🗄️ Data Model
-
-The database is structured to optimize for real-time reads and deep AI context generation:
-
-*   **`users`**: Profiles, roles (`admin` | `consultant`), and tenant associations.
-*   **`deals`**: Core M&A targets, enterprise value (EV), status, and AI memory context.
-*   **`files`**: Metadata for uploaded data room documents (PDFs, Excel, etc.).
-*   **`memos`**: Collaborative investment memos and due diligence reports.
-*   **`tasks`**: Deal-specific action items with priority and status tracking.
-*   **`messages`**: AI Copilot chat history, scoped per deal for continuous context.
+```javascript
+// Example: Task Update Validation
+allow update: if isLegacyOrSameTenant(resource.data) && 
+              isValidTask(request.resource.data) &&
+              isSameTenant(request.resource.data.tenantId) &&
+              request.resource.data.dealId == resource.data.dealId && // Immutable relationship
+              request.resource.data.createdBy == resource.data.createdBy && // Immutable author
+              request.resource.data.createdAt == resource.data.createdAt; // Immutable timestamp
+```
 
 ---
 
-## 💻 Tech Stack
+## 🗄️ Database Schema (TypeScript Definitions)
 
-*   **Frontend Framework:** React 18, Vite
-*   **Styling & UI:** Tailwind CSS, shadcn/ui, Lucide Icons, Framer Motion
-*   **Backend & Database:** Firebase (Firestore, Authentication)
-*   **AI Integration:** `@google/genai` (Gemini 3.1 Pro Preview)
-*   **Routing:** React Router DOM
-*   **Markdown Rendering:** `react-markdown`
+The NoSQL database is strictly typed on the client and validated on the server.
+
+```typescript
+interface User {
+  uid: string;
+  email: string;
+  displayName: string;
+  photoURL: string;
+  role: 'admin' | 'consultant';
+  tenantId: string; // e.g., "bain.com"
+  createdAt: ISOString;
+}
+
+interface Deal {
+  id: string;
+  name: string;
+  targetCompany: string;
+  status: 'sourcing' | 'diligence' | 'closed' | 'passed';
+  ev: number; // Enterprise Value
+  tenantId: string;
+  createdBy: string; // User UID
+  createdAt: ISOString;
+  updatedAt: ISOString;
+}
+
+interface Message {
+  id: string;
+  dealId: string;
+  role: 'user' | 'model';
+  content: string;
+  tenantId: string;
+  userId?: string; // Only present for 'user' role
+  groundingUrls?: string[]; // Present if AI used Google Search
+  createdAt: ISOString;
+}
+```
 
 ---
 
-## 🚀 Getting Started
+## 💻 Development Guide
 
-1. **Install Dependencies:**
+### Prerequisites
+*   Node.js 18+
+*   Firebase Project (Authentication, Firestore enabled)
+*   Google Gemini API Key
+
+### Setup Instructions
+
+1. **Clone & Install:**
    ```bash
    npm install
    ```
 
-2. **Environment Setup:**
-   Ensure your `.env` file contains your Firebase configuration and Gemini API Key:
+2. **Environment Configuration:**
+   Create a `.env` file in the root directory:
    ```env
-   GEMINI_API_KEY=your_api_key_here
+   # Google Gen AI
+   GEMINI_API_KEY=your_gemini_api_key
+
+   # Firebase Configuration (Vite Prefix)
+   VITE_FIREBASE_API_KEY=your_api_key
+   VITE_FIREBASE_AUTH_DOMAIN=your_auth_domain
+   VITE_FIREBASE_PROJECT_ID=your_project_id
+   VITE_FIREBASE_STORAGE_BUCKET=your_storage_bucket
+   VITE_FIREBASE_MESSAGING_SENDER_ID=your_sender_id
+   VITE_FIREBASE_APP_ID=your_app_id
    ```
 
-3. **Run the Development Server:**
+3. **Deploy Security Rules:**
+   Ensure your Firestore rules are up to date to prevent permission errors:
+   ```bash
+   firebase deploy --only firestore:rules
+   ```
+
+4. **Run Development Server:**
    ```bash
    npm run dev
    ```
-   The application will be available at `http://localhost:3000`.
+   The Vite HMR server will start on `http://localhost:3000`.
 
----
-
-*Built with precision for the future of Private Equity and M&A.*
+### Build for Production
+```bash
+npm run build
+```
+This compiles the React application using `tsc` and bundles it via Vite into the `/dist` directory, ready for static hosting.
