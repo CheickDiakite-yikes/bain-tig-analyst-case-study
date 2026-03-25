@@ -14,17 +14,36 @@ import remarkGfm from'remark-gfm';
 const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY});
 
 const cleanText = (input: string) => {
- if (!input) return input;
- // Remove completed thought/think blocks
- let cleaned = input.replace(/<\|?(thought|think)\b[\s\S]*?(?:\|>|<\/\|?(thought|think)\s*>)/gi,'');
- // Remove incomplete thought/think block at the end
- cleaned = cleaned.replace(/<\|?(thought|think)\b[\s\S]*$/i,'');
- // Remove <|file_separator|> and similar tags
- cleaned = cleaned.replace(/<\|?file_separator\|?>|\[file_separator\]/gi,'');
- // Remove hallucinated tool instructions injected by the system
+  if (!input) return input;
+  // Remove completed thought/think blocks
+  let cleaned = input.replace(/<\|?(thought|think)\b[\s\S]*?(?:\|>|<\/\|?(thought|think)\s*>)/gi, '');
+  // Remove incomplete thought/think block at the end
+  cleaned = cleaned.replace(/<\|?(thought|think)\b[\s\S]*$/i, '');
+  // Remove <|file_separator|> and similar tags
+  cleaned = cleaned.replace(/<\|?file_separator\|?>|\[file_separator\]/gi, '');
+  // Remove hallucinated tool instructions injected by the system
   cleaned = cleaned.replace(/If you need to [^,]+, use the [a-zA-Z0-9_]+ tool\.?/gi, '');
   cleaned = cleaned.replace(/If you are done, provide your final response\.?\s*\}?/gi, '');
-  return cleaned.trim();
+  
+  // Remove "Use the [tool] tool..." sentences
+  cleaned = cleaned.replace(/(?:^|\n)\s*Use the [`'"]?[a-zA-Z0-9_]+[`'"]? tool[^.]*\.?/gi, '');
+  
+  // Remove hallucinated "Function call complete" messages
+  cleaned = cleaned.replace(/Function call complete\.?[ \n]*/gi, '');
+  
+  // Remove weird "complete. . complete." artifacts at the end of the text (only if repeated)
+  cleaned = cleaned.replace(/(?:complete[\s\.]*){2,}$/i, '');
+  
+  cleaned = cleaned.trim();
+  if (cleaned.toLowerCase() === 'use' || cleaned.toLowerCase() === 'use the' || cleaned.toLowerCase() === 'use the tool.') {
+    return '';
+  }
+  
+  if (/^(?:complete|\.| |\n)+$/i.test(cleaned)) {
+    return '';
+  }
+  
+  return cleaned;
 };
 
 export default function Chat({ deal, dealId, user, files, memos, tasks, onClose, initialInput}: { deal: any, dealId: string, user: User, files: any[], memos?: any[], tasks?: any[], onClose: () => void, initialInput?: string}) {
@@ -147,7 +166,7 @@ CRITICAL INSTRUCTIONS FOR YOUR ANALYSIS AND MEMOS:
  - A"Tech Stack" visual or"Remediation Cost" chart.
  Embed these generated markdown image links directly into the relevant sections of your memo.
 5. REASONING & THOUGHTS: You are a reasoning model. You MUST wrap all of your internal thinking, reasoning, planning, and self-talk inside <think> and </think> tags. Never output your thoughts as regular text outside of these tags. The user will not see anything inside the <think> tags, so use them freely to plan your actions. CRITICAL: DO NOT output conversational filler like "Wait, I should check...", "Let me think...", or "I will output this now." outside of the <think> tags. Your text output must ONLY be the final, polished response to the user.
-6. IMMEDIATE ACTION: When asked to perform a task (like creating a memo, analyzing a file, or generating an image), DO NOT output conversational filler, summaries, or intermediate steps. Immediately call the necessary tools to complete the task. Only output text when the entire task is complete and you are providing the final result to the user. CRITICAL: DO NOT output any internal tool instructions (e.g., "If you need to generate images, use the generateImage tool") in your text response. These are internal system prompts and must NEVER be shown to the user.
+6. IMMEDIATE ACTION: When asked to perform a task (like creating a memo, analyzing a file, or generating an image), DO NOT output conversational filler, summaries, or intermediate steps. Immediately call the necessary tools to complete the task. Only output text when the entire task is complete and you are providing the final result to the user. CRITICAL: You MUST use the structured function calling API to invoke tools. NEVER just type "Use the [tool] tool" in your text response. If you type "Use the createMemo tool" instead of actually calling the function, the system will fail. Do not output internal tool instructions.
 7. DO NOT OVER-GENERATE: Only create a memo if explicitly asked to draft or create one. If the user asks you to create tasks, ONLY create tasks. Do not re-draft or create a new memo unless specifically requested.
 8. DATA ROOM FOLDERS: The Data Room files are organized into folders (e.g., [Folder: Uploaded Documents], [Folder: AI Generated Assets]). Pay attention to these folders when looking for specific types of files.
 
@@ -711,6 +730,10 @@ Use the updateDealMemory tool to save important context, summaries, or facts abo
  thinkingConfig: thinkingMode ? { thinkingLevel: ThinkingLevel.HIGH} : undefined
 }
 });
+
+if (fullText && !fullText.endsWith('\n') && !fullText.endsWith(' ')) {
+ fullText += '\n\n';
+}
 } else {
  isDone = true;
 }
