@@ -2,6 +2,7 @@ import { useParams, Link, Navigate } from 'react-router-dom';
 import { motion } from 'motion/react';
 import { BrainCircuit, ArrowLeft, Calendar, User as UserIcon } from 'lucide-react';
 import { blogPosts } from './Blogs';
+import Footer from '../components/Footer';
 
 export default function BlogPost() {
   const { slug } = useParams();
@@ -65,43 +66,43 @@ export default function BlogPost() {
             {slug === 'meet-tiggy' && (
               <>
                 <p className="lead text-2xl font-medium border-l-4 border-[#CC0000] pl-6 mb-8">
-                  In the fast-paced world of Private Equity and M&A, the due diligence phase is often the bottleneck. It's a grueling process of sifting through thousands of documents, identifying risks, and synthesizing data into actionable insights. Enter TIGGY.
+                  Welcome to the future of Technology Due Diligence. For Bain TIG (Technology & Innovation Group) professionals, the 3-week sprint of a PE deal is a familiar battle. It's a grueling process of sifting through thousands of documents, assessing tech stacks, and synthesizing data into actionable investment thesis insights. Enter TIGGY.
                 </p>
 
-                <h2>The Diligence Dilemma</h2>
+                <h2>The Tech Diligence Dilemma</h2>
                 <p>
-                  For decades, top-tier consulting firms and investment banks have relied on armies of analysts to manually review data rooms. This approach is not only expensive and time-consuming but also prone to human error. Critical red flags can easily be missed in the sheer volume of information.
+                  As a Bain consultant, you know that evaluating a target company's software architecture, cybersecurity posture, and IT organization requires deep expertise and massive amounts of time. You're tasked with finding the hidden technical debt, assessing scalability, and identifying value creation levers—all under a tight exclusivity window.
                 </p>
                 <p>
-                  We built TIGGY to solve this exact problem. TIGGY is an AI Copilot specifically engineered for the high-stakes environment of M&A deal execution.
+                  Relying solely on manual review of VDRs (Virtual Data Rooms) is no longer enough. Critical red flags in open-source licenses, hidden vulnerabilities in SOC 2 reports, or monolithic bottlenecks in architecture diagrams can easily be buried in the sheer volume of information. We built TIGGY to solve this exact problem.
                 </p>
 
                 <h2>What is TIGGY?</h2>
                 <p>
-                  TIGGY is a highly secure, multi-tenant Deal Management platform powered by Google's Gemini 3.1 Pro. It acts as an autonomous agent within your deal room, capable of analyzing complex financial models, codebases, and legal documents in seconds.
+                  TIGGY is a highly secure, multi-tenant Deal Management platform powered by Google's Gemini 3.1 Pro. It acts as an autonomous agent within your deal room, specifically engineered to augment Bain TIG consultants by analyzing complex financial models, codebases, and legal documents in seconds.
                 </p>
 
-                <h2>Key Benefits</h2>
+                <h2>Key Benefits for Bain Professionals</h2>
                 <ul>
-                  <li><strong>10x Faster Diligence:</strong> What used to take weeks now takes hours. TIGGY instantly synthesizes data room contents, allowing your team to focus on strategic decision-making rather than manual data extraction.</li>
-                  <li><strong>Automated Risk Scoring:</strong> Our proprietary models identify potential liabilities, tech debt, and market risks, highlighting them before they become deal-breakers.</li>
-                  <li><strong>Enterprise-Grade Security:</strong> We understand that confidentiality is paramount. TIGGY operates in an isolated, SOC 2 & ISO 27001 compliant sandbox. We employ a strict Zero-Data-Retention policy—your proprietary data is never used to train public models.</li>
-                  <li><strong>Real-Time Collaboration:</strong> Work seamlessly with your deal team in a synchronous multiplayer environment.</li>
+                  <li><strong>10x Faster Synthesis:</strong> Instantly parse AWS/Azure architecture diagrams, codebase scans, and IT budgets. TIGGY extracts the signal from the noise, allowing you to focus on strategic advisory rather than manual data extraction.</li>
+                  <li><strong>Automated Risk & Cyber Scoring:</strong> Our proprietary models identify potential liabilities, tech debt, and cybersecurity risks (like missing SOC 2 controls or outdated dependencies), highlighting them before they become deal-breakers.</li>
+                  <li><strong>Enterprise-Grade Security (Bain Standard):</strong> We understand that PE confidentiality is paramount. TIGGY operates in an isolated, SOC 2 & ISO 27001 compliant sandbox. We employ a strict Zero-Data-Retention policy—your proprietary deal data is never used to train public models.</li>
+                  <li><strong>Seamless Deal Team Collaboration:</strong> Work synchronously with your Partners, Managers, and external SMEs in a multiplayer environment designed for high-stakes deal execution.</li>
                 </ul>
 
-                <h2>How It Works</h2>
+                <h2>How It Augments Your Workflow</h2>
                 <p>
-                  The workflow is simple yet powerful:
+                  The workflow is designed to fit seamlessly into the Bain DD methodology:
                 </p>
                 <ol>
-                  <li><strong>Secure Ingestion:</strong> Upload your confidential data room files into your firm's isolated tenant.</li>
-                  <li><strong>AI Synthesis:</strong> Ask TIGGY complex questions about the target company. The AI will analyze the documents and provide grounded, cited answers.</li>
-                  <li><strong>Actionable Insights:</strong> Generate investment memos, risk reports, and architecture validations with a single click.</li>
+                  <li><strong>Secure Ingestion:</strong> Upload the target's confidential data room files (architecture docs, code scans, IT org charts) into your firm's isolated tenant.</li>
+                  <li><strong>AI-Powered Interrogation:</strong> Ask TIGGY complex questions like, <em>"Summarize the key findings from the Veracode scan"</em> or <em>"Identify any single points of failure in the infrastructure diagram."</em> The AI will analyze the documents and provide grounded, cited answers.</li>
+                  <li><strong>Actionable Insights & IC Memos:</strong> Generate draft sections for your Investment Committee (IC) memos, risk reports, and architecture validations with a single click, ready for your expert refinement.</li>
                 </ol>
 
-                <h2>The Future of M&A</h2>
+                <h2>The Future of M&A Advisory</h2>
                 <p>
-                  TIGGY isn't just a tool; it's a paradigm shift in how deals are evaluated and executed. By augmenting your team with an AI Copilot, you gain an unparalleled edge in the market.
+                  TIGGY isn't just a tool; it's a paradigm shift in how tech due diligence is executed. By augmenting your TIG team with an AI Copilot, you deliver deeper insights, faster, giving your Private Equity clients an unparalleled edge in the market.
                 </p>
                 <p>
                   Ready to accelerate your diligence? <Link to="/login">Access the portal today</Link>.
@@ -111,6 +112,7 @@ export default function BlogPost() {
           </div>
         </motion.div>
       </main>
+      <Footer />
     </div>
   );
 }

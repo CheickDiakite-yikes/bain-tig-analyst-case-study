@@ -1,12 +1,13 @@
 import { motion } from 'motion/react';
 import { Link } from 'react-router-dom';
 import { BrainCircuit, ArrowRight, Calendar } from 'lucide-react';
+import Footer from '../components/Footer';
 
 export const blogPosts = [
   {
     slug: 'meet-tiggy',
-    title: 'Meet TIGGY: The AI Copilot Revolutionizing Private Equity M&A',
-    excerpt: 'Discover how TIGGY accelerates due diligence, automates risk scoring, and provides an isolated, SOC 2 & ISO 27001 compliant environment for top-tier firms.',
+    title: 'Welcome Bain! Meet TIGGY: The AI Copilot Revolutionizing Tech Due Diligence',
+    excerpt: 'Designed specifically for Bain TIG professionals, TIGGY accelerates tech due diligence, automates risk scoring for architecture and cyber, and provides a secure, SOC 2 compliant environment for your deal teams.',
     date: 'March 25, 2026',
     author: 'TIGGY Team',
     imageUrl: 'https://picsum.photos/seed/tiggy-blog-1/800/400?blur=1'
@@ -77,6 +78,7 @@ export default function Blogs() {
           ))}
         </div>
       </main>
+      <Footer />
     </div>
   );
 }
