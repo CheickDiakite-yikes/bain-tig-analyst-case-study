@@ -28,7 +28,7 @@ export default function Privacy() {
           <div className="mb-12 border-b-4 border-black pb-8">
             <h1 className="text-5xl md:text-7xl font-black uppercase tracking-tighter mb-4">Privacy <span className="text-[#CC0000]">Policy</span></h1>
             <p className="text-xl font-medium text-gray-600 border-l-4 border-[#CC0000] pl-4">
-              SOC2 Compliant. Zero-Data-Retention. Your deal data is your own.
+              SOC 2 & ISO 27001 Compliant. Zero-Data-Retention. Your deal data is your own.
             </p>
             <p className="text-sm font-bold uppercase tracking-wider text-gray-400 mt-4">Last Updated: March 2026</p>
           </div>
@@ -69,7 +69,7 @@ export default function Privacy() {
                   We employ enterprise-grade security measures designed for top-tier Private Equity and Strategy Consulting firms.
                 </p>
                 <ul className="list-disc pl-6 space-y-2">
-                  <li><strong>SOC2 Type II:</strong> Our infrastructure and operational processes are audited and certified SOC2 Type II compliant.</li>
+                  <li><strong>SOC 2 Type II & ISO 27001:</strong> Our infrastructure and operational processes are audited and certified SOC 2 Type II and ISO 27001 compliant.</li>
                   <li><strong>Encryption:</strong> All data is encrypted at rest (AES-256) and in transit (TLS 1.3).</li>
                   <li><strong>Isolated Tenants:</strong> Each client firm operates within a logically isolated tenant environment to prevent cross-contamination.</li>
                 </ul>

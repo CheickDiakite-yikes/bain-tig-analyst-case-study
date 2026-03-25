@@ -83,7 +83,7 @@ export default function Login() {
           <div className="grid grid-cols-2 gap-6 border-t-2 border-gray-800 pt-8">
             <div>
               <h4 className="font-black uppercase tracking-wider text-[#CC0000] mb-2">Secure</h4>
-              <p className="text-sm font-bold text-gray-500 uppercase tracking-wider">SOC2 Compliant Sandbox</p>
+              <p className="text-sm font-bold text-gray-500 uppercase tracking-wider">SOC 2 & ISO 27001 Sandbox</p>
             </div>
             <div>
               <h4 className="font-black uppercase tracking-wider text-[#CC0000] mb-2">Fast</h4>

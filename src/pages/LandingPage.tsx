@@ -236,7 +236,7 @@ const SecurityVault = () => {
               The <span className="text-[#CC0000]">Vault.</span>
             </h2>
             <p className="text-xl md:text-2xl text-gray-400 font-medium max-w-2xl leading-relaxed border-l-4 border-[#CC0000] pl-6">
-              In Private Equity, data room confidentiality is paramount. TIGGY is engineered from the ground up to exceed enterprise security standards.
+              In Private Equity, data room confidentiality is paramount. TIGGY is engineered from the ground up to exceed enterprise and financial institution security standards (SOC 2, ISO 27001).
             </p>
           </div>
           <div className="w-40 h-40 bg-[#CC0000] border-4 border-white flex items-center justify-center relative shadow-[12px_12px_0px_0px_rgba(255,255,255,1)] shrink-0">
@@ -253,8 +253,8 @@ const SecurityVault = () => {
           {[
             {
               icon: <ShieldCheck className="w-8 h-8" />,
-              title: "SOC2 Type II",
-              desc: "Fully certified and compliant infrastructure, ensuring your sensitive deal data is protected by rigorous security controls."
+              title: "SOC 2 & ISO 27001",
+              desc: "Fully certified and compliant infrastructure, ensuring your sensitive deal data is protected by rigorous financial institution security controls."
             },
             {
               icon: <FileLock2 className="w-8 h-8" />,
@@ -398,7 +398,7 @@ export default function LandingPage() {
                   <li className="flex items-center gap-3"><CheckCircle2 className="w-5 h-5 text-[#CC0000]" /> 10x Faster Diligence</li>
                   <li className="flex items-center gap-3"><CheckCircle2 className="w-5 h-5 text-[#CC0000]" /> Automated Risk Scoring</li>
                   <li className="flex items-center gap-3"><CheckCircle2 className="w-5 h-5 text-[#CC0000]" /> Architecture Validation</li>
-                  <li className="flex items-center gap-3"><CheckCircle2 className="w-5 h-5 text-[#CC0000]" /> SOC2 Compliant Sandbox</li>
+                  <li className="flex items-center gap-3"><CheckCircle2 className="w-5 h-5 text-[#CC0000]" /> SOC 2 & ISO 27001 Sandbox</li>
                 </ul>
               </div>
             </motion.div>
@@ -451,7 +451,7 @@ export default function LandingPage() {
               {
                 icon: <ShieldCheck className="w-8 h-8" />,
                 title: "1. Secure Ingestion",
-                desc: "Upload confidential data room files into our isolated, SOC2-compliant environment. Your data never trains public models."
+                desc: "Upload confidential data room files into our isolated, SOC 2 & ISO 27001 compliant environment. Your data never trains public models."
               },
               {
                 icon: <BrainCircuit className="w-8 h-8" />,
