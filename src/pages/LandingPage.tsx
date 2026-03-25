@@ -531,9 +531,9 @@ export default function LandingPage() {
             <span className="font-black text-lg uppercase tracking-widest">TIGGY</span>
           </div>
           <div className="flex gap-6 text-sm font-bold uppercase tracking-wider text-gray-400">
-            <a href="#" className="hover:text-white transition-colors">Privacy</a>
-            <a href="#" className="hover:text-white transition-colors">Terms</a>
-            <a href="#" className="hover:text-white transition-colors">Contact</a>
+            <Link to="/privacy" className="hover:text-white transition-colors">Privacy</Link>
+            <Link to="/terms" className="hover:text-white transition-colors">Terms</Link>
+            <Link to="/contact" className="hover:text-white transition-colors">Contact</Link>
           </div>
           <div className="text-sm font-medium text-gray-500">
             &copy; {new Date().getFullYear()} TIGGY LLC. All rights reserved.
