@@ -292,18 +292,20 @@ export default function LandingPage() {
   return (
     <div className="min-h-screen bg-[#f5f5f0] text-black font-sans selection:bg-[#CC0000] selection:text-white">
       {/* Navigation */}
-      <nav className="fixed top-0 w-full bg-[#f5f5f0] border-b-2 border-black z-50 px-6 py-4 flex justify-between items-center">
-        <div className="flex items-center gap-2">
-          <BrainCircuit className="w-8 h-8 text-[#CC0000]" />
-          <span className="font-black text-xl uppercase tracking-widest">TIGGY</span>
-        </div>
-        <div className="flex items-center gap-6">
-          <Link to="/login" className="font-bold uppercase tracking-wider hover:text-[#CC0000] transition-colors hidden md:block">
-            Client Portal
-          </Link>
-          <Link to="/login" className="bg-black text-white px-6 py-2 font-bold uppercase tracking-wider border-2 border-black hover:bg-white hover:text-black transition-all shadow-[4px_4px_0px_0px_rgba(204,0,0,1)] hover:shadow-[2px_2px_0px_0px_rgba(204,0,0,1)] hover:translate-x-[2px] hover:translate-y-[2px]">
-            Sign In
-          </Link>
+      <nav className="fixed top-0 w-full bg-[#f5f5f0] border-b-2 border-black z-50">
+        <div className="max-w-7xl mx-auto px-6 py-4 flex justify-between items-center">
+          <div className="flex items-center gap-2">
+            <BrainCircuit className="w-8 h-8 text-[#CC0000]" />
+            <span className="font-black text-xl uppercase tracking-widest">TIGGY</span>
+          </div>
+          <div className="flex items-center gap-6">
+            <Link to="/login" className="font-bold uppercase tracking-wider hover:text-[#CC0000] transition-colors hidden md:block">
+              Client Portal
+            </Link>
+            <Link to="/login" className="bg-black text-white px-6 py-2 font-bold uppercase tracking-wider border-2 border-black hover:bg-white hover:text-black transition-all shadow-[4px_4px_0px_0px_rgba(204,0,0,1)] hover:shadow-[2px_2px_0px_0px_rgba(204,0,0,1)] hover:translate-x-[2px] hover:translate-y-[2px]">
+              Sign In
+            </Link>
+          </div>
         </div>
       </nav>
 
@@ -525,17 +527,19 @@ export default function LandingPage() {
 
       {/* Footer */}
       <footer className="bg-black text-white py-12 px-6">
-        <div className="max-w-7xl mx-auto flex flex-col md:flex-row justify-between items-center gap-6">
-          <div className="flex items-center gap-2">
-            <BrainCircuit className="w-6 h-6 text-[#CC0000]" />
-            <span className="font-black text-lg uppercase tracking-widest">TIGGY</span>
+        <div className="max-w-7xl mx-auto flex flex-col md:flex-row items-center justify-between gap-6">
+          <div className="flex-1 flex justify-start">
+            <div className="flex items-center gap-2">
+              <BrainCircuit className="w-6 h-6 text-[#CC0000]" />
+              <span className="font-black text-lg uppercase tracking-widest">TIGGY</span>
+            </div>
           </div>
-          <div className="flex gap-6 text-sm font-bold uppercase tracking-wider text-gray-400">
+          <div className="flex-1 flex justify-center gap-6 text-sm font-bold uppercase tracking-wider text-gray-400">
             <Link to="/privacy" className="hover:text-white transition-colors">Privacy</Link>
             <Link to="/terms" className="hover:text-white transition-colors">Terms</Link>
             <Link to="/contact" className="hover:text-white transition-colors">Contact</Link>
           </div>
-          <div className="text-sm font-medium text-gray-500">
+          <div className="flex-1 flex justify-end text-sm font-medium text-gray-500 text-center md:text-right">
             &copy; {new Date().getFullYear()} TIGGY LLC. All rights reserved.
           </div>
         </div>

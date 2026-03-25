@@ -6,14 +6,16 @@ export default function Privacy() {
   return (
     <div className="min-h-screen bg-[#f5f5f0] text-black font-sans selection:bg-[#CC0000] selection:text-white">
       {/* Navigation */}
-      <nav className="fixed top-0 w-full bg-[#f5f5f0] border-b-2 border-black z-50 px-6 py-4 flex justify-between items-center">
-        <Link to="/" className="flex items-center gap-2 hover:opacity-80 transition-opacity">
-          <BrainCircuit className="w-8 h-8 text-[#CC0000]" />
-          <span className="font-black text-xl uppercase tracking-widest">TIGGY</span>
-        </Link>
-        <Link to="/" className="flex items-center gap-2 font-bold uppercase tracking-wider hover:text-[#CC0000] transition-colors">
-          <ArrowLeft className="w-5 h-5" /> Back to Home
-        </Link>
+      <nav className="fixed top-0 w-full bg-[#f5f5f0] border-b-2 border-black z-50">
+        <div className="max-w-7xl mx-auto px-6 py-4 flex justify-between items-center">
+          <Link to="/" className="flex items-center gap-2 hover:opacity-80 transition-opacity">
+            <BrainCircuit className="w-8 h-8 text-[#CC0000]" />
+            <span className="font-black text-xl uppercase tracking-widest">TIGGY</span>
+          </Link>
+          <Link to="/" className="flex items-center gap-2 font-bold uppercase tracking-wider hover:text-[#CC0000] transition-colors">
+            <ArrowLeft className="w-5 h-5" /> Back to Home
+          </Link>
+        </div>
       </nav>
 
       {/* Main Content */}
