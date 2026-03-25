@@ -541,6 +541,7 @@ export default function LandingPage() {
             </div>
           </div>
           <div className="flex-1 flex justify-center gap-6 text-sm font-bold uppercase tracking-wider text-gray-400">
+            <Link to="/blogs" className="hover:text-white transition-colors">Blogs</Link>
             <Link to="/privacy" className="hover:text-white transition-colors">Privacy</Link>
             <Link to="/terms" className="hover:text-white transition-colors">Terms</Link>
             <Link to="/contact" className="hover:text-white transition-colors">Contact</Link>

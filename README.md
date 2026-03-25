@@ -47,7 +47,8 @@ The application follows a modern, serverless, event-driven architecture utilizin
 ## 🧠 Core Technical Implementations
 
 ### 1. Agentic AI Copilot (Gemini 3.1 Pro)
-The AI integration goes beyond simple text generation. It acts as an autonomous agent within the deal room using **Function Calling (Tools)**.
+The AI integration goes beyond simple text generation. It acts as an autonomous agent within the deal room using the **Gemini Interactions API** and **Function Calling (Tools)**.
+*   **Gemini Interactions API:** We leverage the latest `@google/genai` SDK and the Gemini Interactions API to facilitate real-time, streaming conversations (`generateContentStream`) between the user and the AI, providing a seamless, low-latency chat experience.
 *   **Tool Invocations:** The AI is equipped with `FunctionDeclaration` objects allowing it to execute backend operations directly from the chat interface. Tools include `createMemoFunction`, `readMemoFunction`, `updateTaskFunction`, `analyzeDataRoomFileFunction`, and `updateDealMemoryFunction`.
 *   **Context Window Management:** The chat component fetches the entire `messages` collection scoped to the specific `dealId` and formats it into a continuous conversation history for the Gemini model, ensuring deep contextual awareness of the deal's diligence phase.
 *   **Grounding:** Utilizes Google Search grounding to pull in real-time market data and news regarding target companies.

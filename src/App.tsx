@@ -10,6 +10,8 @@ import LandingPage from './pages/LandingPage';
 import Privacy from './pages/Privacy';
 import Terms from './pages/Terms';
 import Contact from './pages/Contact';
+import Blogs from './pages/Blogs';
+import BlogPost from './pages/BlogPost';
 
 export default function App() {
   const [user, setUser] = useState<User | null>(null);
@@ -35,6 +37,8 @@ export default function App() {
         <Route path="/privacy" element={<Privacy />} />
         <Route path="/terms" element={<Terms />} />
         <Route path="/contact" element={<Contact />} />
+        <Route path="/blogs" element={<Blogs />} />
+        <Route path="/blogs/:slug" element={<BlogPost />} />
         <Route element={user ? <Layout user={user} /> : <Navigate to="/login" />}>
           <Route path="/dashboard" element={<Dashboard user={user} />} />
           <Route path="/deals/:dealId" element={<DealRoom user={user} />} />
