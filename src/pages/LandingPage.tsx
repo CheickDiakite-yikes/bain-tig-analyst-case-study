@@ -315,7 +315,7 @@ export default function LandingPage() {
       <section className="py-24 bg-white border-y-2 border-black">
         <div className="max-w-7xl mx-auto px-6">
           <div className="text-center mb-20">
-            <h2 className="text-4xl md:text-6xl font-black uppercase tracking-tighter mb-4">How We Work</h2>
+            <h2 className="text-4xl md:text-6xl font-black uppercase tracking-tighter mb-4">How TIGGY Works</h2>
             <p className="text-xl text-gray-600 max-w-2xl mx-auto font-medium">A streamlined, AI-powered approach to evaluating assets and executing deals.</p>
           </div>
 
