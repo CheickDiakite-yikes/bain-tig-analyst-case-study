@@ -1,6 +1,6 @@
 import { motion } from 'motion/react';
 import { Link } from 'react-router-dom';
-import { ArrowRight, ChevronDown, CheckCircle2, BarChart3, FileText, BrainCircuit, ShieldCheck } from 'lucide-react';
+import { ArrowRight, ChevronDown, CheckCircle2, BarChart3, FileText, BrainCircuit, ShieldCheck, Lock, Server, GitBranch, TrendingUp, Building2, Database, FileLock2 } from 'lucide-react';
 import { useState } from 'react';
 
 const FAQItem = ({ question, answer }: { question: string, answer: string }) => {
@@ -164,6 +164,125 @@ const PlatformDemo = () => {
             </div>
           </div>
         </motion.div>
+      </div>
+    </section>
+  );
+};
+
+const DealArchetypes = () => {
+  return (
+    <section className="py-24 bg-[#f5f5f0] border-y-2 border-black">
+      <div className="max-w-7xl mx-auto px-6">
+        <div className="text-center mb-20">
+          <h2 className="text-4xl md:text-6xl font-black uppercase tracking-tighter mb-4">Built for Every Deal Context</h2>
+          <p className="text-xl text-gray-600 max-w-2xl mx-auto font-medium">TIGGY adapts to the specific thesis and risks of your transaction archetype.</p>
+        </div>
+
+        <div className="grid md:grid-cols-3 gap-8">
+          {[
+            {
+              icon: <GitBranch className="w-10 h-10" />,
+              title: "Carve-outs",
+              desc: "Analyzing entanglement, shared services, and standalone costs to ensure a clean separation."
+            },
+            {
+              icon: <TrendingUp className="w-10 h-10" />,
+              title: "Growth Equity",
+              desc: "Auditing scalability, architecture bottlenecks, and engineering velocity for rapid expansion."
+            },
+            {
+              icon: <Building2 className="w-10 h-10" />,
+              title: "LBOs",
+              desc: "Identifying technical debt, cost-reduction opportunities, and post-close integration risks."
+            }
+          ].map((archetype, i) => (
+            <motion.div 
+              key={i}
+              initial={{ opacity: 0, y: 30 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true, margin: "-100px" }}
+              transition={{ duration: 0.5, delay: i * 0.2 }}
+              className="bg-white border-4 border-black p-8 relative group hover:-translate-y-2 hover:translate-x-2 transition-transform duration-300 shadow-[8px_8px_0px_0px_rgba(0,0,0,1)] hover:shadow-[0px_0px_0px_0px_rgba(0,0,0,1)]"
+            >
+              <div className="w-20 h-20 bg-[#f5f5f0] border-4 border-black flex items-center justify-center mb-8 group-hover:bg-[#CC0000] group-hover:text-white transition-colors duration-300 text-black">
+                {archetype.icon}
+              </div>
+              <h3 className="text-3xl font-black uppercase tracking-tight mb-4">{archetype.title}</h3>
+              <p className="text-lg font-medium leading-relaxed text-gray-700">{archetype.desc}</p>
+            </motion.div>
+          ))}
+        </div>
+      </div>
+    </section>
+  );
+};
+
+const SecurityVault = () => {
+  return (
+    <section className="py-24 bg-black text-white border-y-2 border-black relative overflow-hidden">
+      {/* Animated background element */}
+      <motion.div
+        animate={{ rotate: 360 }}
+        transition={{ repeat: Infinity, duration: 60, ease: "linear" }}
+        className="absolute -top-64 -right-64 opacity-5 pointer-events-none"
+      >
+        <ShieldCheck className="w-[800px] h-[800px]" />
+      </motion.div>
+
+      <div className="max-w-7xl mx-auto px-6 relative z-10">
+        <div className="flex flex-col md:flex-row gap-12 items-center mb-20">
+          <div className="flex-1">
+            <h2 className="text-5xl md:text-7xl font-black uppercase tracking-tighter mb-6 leading-[0.9]">
+              The <span className="text-[#CC0000]">Vault.</span>
+            </h2>
+            <p className="text-xl md:text-2xl text-gray-400 font-medium max-w-2xl leading-relaxed border-l-4 border-[#CC0000] pl-6">
+              In Private Equity, data room confidentiality is paramount. TIGGY is engineered from the ground up to exceed enterprise security standards.
+            </p>
+          </div>
+          <div className="w-40 h-40 bg-[#CC0000] border-4 border-white flex items-center justify-center relative shadow-[12px_12px_0px_0px_rgba(255,255,255,1)] shrink-0">
+            <motion.div
+              animate={{ y: [0, -8, 0] }}
+              transition={{ repeat: Infinity, duration: 3, ease: "easeInOut" }}
+            >
+              <Lock className="w-20 h-20 text-white" />
+            </motion.div>
+          </div>
+        </div>
+
+        <div className="grid md:grid-cols-3 gap-8">
+          {[
+            {
+              icon: <ShieldCheck className="w-8 h-8" />,
+              title: "SOC2 Type II",
+              desc: "Fully certified and compliant infrastructure, ensuring your sensitive deal data is protected by rigorous security controls."
+            },
+            {
+              icon: <FileLock2 className="w-8 h-8" />,
+              title: "Zero-Data-Retention",
+              desc: "Our models are never trained on your proprietary data room documents. What happens in the vault, stays in the vault."
+            },
+            {
+              icon: <Server className="w-8 h-8" />,
+              title: "Isolated Tenants",
+              desc: "Every firm operates in a completely siloed environment. No cross-contamination, no shared databases, absolute privacy."
+            }
+          ].map((feature, i) => (
+            <motion.div 
+              key={i}
+              initial={{ opacity: 0, y: 30 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true, margin: "-100px" }}
+              transition={{ duration: 0.5, delay: i * 0.2 }}
+              className="bg-[#111] border-2 border-gray-800 p-8 hover:border-[#CC0000] transition-colors duration-300"
+            >
+              <div className="w-16 h-16 bg-black border-2 border-gray-700 flex items-center justify-center mb-6 text-[#CC0000]">
+                {feature.icon}
+              </div>
+              <h3 className="text-2xl font-black uppercase tracking-tight mb-4 text-white">{feature.title}</h3>
+              <p className="font-medium leading-relaxed text-gray-400">{feature.desc}</p>
+            </motion.div>
+          ))}
+        </div>
       </div>
     </section>
   );
@@ -355,6 +474,12 @@ export default function LandingPage() {
           </div>
         </div>
       </section>
+
+      {/* Deal Archetypes Section */}
+      <DealArchetypes />
+
+      {/* Security Vault Section */}
+      <SecurityVault />
 
       {/* FAQ Section */}
       <section className="py-24 bg-[#f5f5f0]">
