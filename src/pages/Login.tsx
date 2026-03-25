@@ -45,7 +45,7 @@ export default function Login() {
  <div className="bg-[#CC0000] p-4 border-2 border-black">
  <BrainCircuit className="w-12 h-12 text-white" />
  </div>
- <h1 className="text-3xl font-bold tracking-tight uppercase">Bain Tech DD AI</h1>
+ <h1 className="text-3xl font-bold tracking-tight uppercase">TIGGY</h1>
  <p className="text-gray-600 font-bold uppercase tracking-wider">Agentic AI Analyst for Private Equity Due Diligence</p>
  </div>
 

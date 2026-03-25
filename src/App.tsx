@@ -6,6 +6,7 @@ import Layout from'./components/Layout';
 import Login from'./pages/Login';
 import Dashboard from'./pages/Dashboard';
 import DealRoom from'./pages/DealRoom';
+import LandingPage from'./pages/LandingPage';
 
 function ApiKeyGuard({ children}: { children: React.ReactNode}) {
  const [hasKey, setHasKey] = useState<boolean | null>(null);
@@ -81,9 +82,10 @@ export default function App() {
  <ApiKeyGuard>
  <BrowserRouter>
  <Routes>
- <Route path="/login" element={!user ? <Login /> : <Navigate to="/" />} />
+ <Route path="/" element={!user ? <LandingPage /> : <Navigate to="/dashboard" />} />
+ <Route path="/login" element={!user ? <Login /> : <Navigate to="/dashboard" />} />
  <Route element={user ? <Layout user={user} /> : <Navigate to="/login" />}>
- <Route path="/" element={<Dashboard user={user} />} />
+ <Route path="/dashboard" element={<Dashboard user={user} />} />
  <Route path="/deals/:dealId" element={<DealRoom user={user} />} />
  </Route>
  </Routes>

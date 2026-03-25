@@ -1,4 +1,4 @@
-import { useState, useEffect} from'react';
+import { useState, useEffect, useRef} from'react';
 import { useParams, Link} from'react-router-dom';
 import { doc, onSnapshot, collection, query, orderBy, addDoc, updateDoc, deleteDoc} from'firebase/firestore';
 import { db} from'../firebase';
@@ -13,6 +13,7 @@ import TaskModal from'../components/TaskModal';
 import { ImageViewerModal} from'../components/ui/ImageViewerModal';
 import ReactMarkdown from'react-markdown';
 import remarkGfm from'remark-gfm';
+import html2pdf from 'html2pdf.js';
 
 const stripMarkdown = (text: string) => {
  if (!text) return'';
@@ -79,7 +80,7 @@ export default function DealRoom({ user}: { user: User}) {
  <div className="flex flex-col gap-4 md:gap-6 border-b-2 border-black mb-4 md:mb-6">
  <div className="flex items-start justify-between gap-4">
  <div className="flex items-start gap-2 md:gap-4 flex-1 min-w-0">
- <Link to="/" className="p-2 hover:bg-white border-2 border-transparent hover:border-black transition-all shrink-0 -ml-2 md:ml-0 mt-0.5 md:mt-0">
+ <Link to="/dashboard" className="p-2 hover:bg-white border-2 border-transparent hover:border-black transition-all shrink-0 -ml-2 md:ml-0 mt-0.5 md:mt-0">
  <ArrowLeft className="w-5 h-5 text-black" />
  </Link>
  <div className="min-w-0 flex-1 pt-1">
@@ -424,6 +425,18 @@ function MemoEditor({ memo, onClose, onDelete}: { memo: any, onClose: () => void
  const [isSaving, setIsSaving] = useState(false);
  const [viewMode, setViewMode] = useState<'edit' |'preview'>('preview');
  const [viewingImage, setViewingImage] = useState<string | null>(null);
+ const [isMenuOpen, setIsMenuOpen] = useState(false);
+ const menuRef = useRef<HTMLDivElement>(null);
+
+ useEffect(() => {
+ const handleClickOutside = (event: MouseEvent) => {
+ if (menuRef.current && !menuRef.current.contains(event.target as Node)) {
+ setIsMenuOpen(false);
+ }
+ };
+ document.addEventListener('mousedown', handleClickOutside);
+ return () => document.removeEventListener('mousedown', handleClickOutside);
+ }, []);
 
  useEffect(() => {
  if (memo) {
@@ -448,6 +461,108 @@ function MemoEditor({ memo, onClose, onDelete}: { memo: any, onClose: () => void
  setIsSaving(false);
 };
 
+ const exportPdf = () => {
+ const element = document.getElementById('memo-export-content');
+ if (!element) return;
+ 
+ const opt = {
+ margin: 15,
+ filename: `${title || 'memo'}.pdf`,
+ image: { type: 'jpeg' as const, quality: 0.98 },
+ html2canvas: { 
+ scale: 2, 
+ useCORS: true,
+ onclone: (doc: Document) => {
+ const styles = doc.querySelectorAll('style, link[rel="stylesheet"]');
+ styles.forEach(s => s.remove());
+ 
+ const style = doc.createElement('style');
+ style.innerHTML = `
+ body { font-family: sans-serif; color: #000; background: #fff; }
+ h1, h2, h3, h4 { color: #000; margin-top: 1.5em; margin-bottom: 0.5em; font-weight: bold; }
+ h1 { font-size: 24px; }
+ h2 { font-size: 20px; }
+ h3 { font-size: 18px; }
+ p { margin-bottom: 1em; line-height: 1.5; }
+ img { max-width: 100%; height: auto; }
+ table { border-collapse: collapse; width: 100%; margin-bottom: 1em; }
+ th, td { border: 1px solid #ccc; padding: 8px; text-align: left; }
+ th { background-color: #f3f4f6; }
+ code { background-color: #f3f4f6; padding: 2px 4px; border-radius: 4px; font-family: monospace; }
+ pre { background-color: #f3f4f6; padding: 1em; border-radius: 4px; overflow-x: auto; }
+ pre code { background-color: transparent; padding: 0; }
+ blockquote { border-left: 4px solid #ccc; margin: 0; padding-left: 1em; color: #4b5563; }
+ ul, ol { margin-bottom: 1em; padding-left: 2em; }
+ li { margin-bottom: 0.25em; }
+ `;
+ doc.head.appendChild(style);
+ }
+ },
+ jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' as const }
+ };
+ 
+ html2pdf().set(opt).from(element).save();
+ setIsMenuOpen(false);
+ };
+
+ const exportWord = () => {
+ const element = document.getElementById('memo-export-content');
+ if (!element) return;
+ 
+ const html = `
+ <html xmlns:o='urn:schemas-microsoft-com:office:office' xmlns:w='urn:schemas-microsoft-com:office:word' xmlns='http://www.w3.org/TR/REC-html40'>
+ <head>
+ <meta charset='utf-8'>
+ <title>${title || 'Memo'}</title>
+ <style>
+ body { font-family: Arial, sans-serif; color: #000000; }
+ h1 { font-size: 24pt; font-weight: bold; margin-bottom: 12pt; }
+ h2 { font-size: 18pt; font-weight: bold; margin-top: 18pt; margin-bottom: 8pt; }
+ h3 { font-size: 14pt; font-weight: bold; margin-top: 14pt; margin-bottom: 6pt; }
+ p { font-size: 11pt; line-height: 1.5; margin-bottom: 10pt; }
+ table { border-collapse: collapse; width: 100%; margin-bottom: 10pt; }
+ th, td { border: 1pt solid #cccccc; padding: 6pt; text-align: left; }
+ th { background-color: #f2f2f2; font-weight: bold; }
+ code { font-family: 'Courier New', Courier, monospace; background-color: #f4f4f4; padding: 2pt; }
+ pre { background-color: #f4f4f4; padding: 10pt; }
+ blockquote { border-left: 3pt solid #cccccc; padding-left: 10pt; color: #666666; margin-left: 0; }
+ img { max-width: 100%; }
+ </style>
+ </head>
+ <body>
+ ${element.innerHTML}
+ </body>
+ </html>
+ `;
+ 
+ const blob = new Blob(['\ufeff', html], {
+ type: 'application/msword'
+ });
+ 
+ const url = URL.createObjectURL(blob);
+ const link = document.createElement('a');
+ link.href = url;
+ link.download = `${title || 'memo'}.doc`;
+ document.body.appendChild(link);
+ link.click();
+ document.body.removeChild(link);
+ URL.revokeObjectURL(url);
+ setIsMenuOpen(false);
+ };
+
+ const handleExport = (type: 'pdf' | 'word') => {
+ const doExport = type === 'pdf' ? exportPdf : exportWord;
+ 
+ if (viewMode === 'edit') {
+ setViewMode('preview');
+ setTimeout(() => {
+ doExport();
+ }, 500);
+ } else {
+ doExport();
+ }
+ };
+
  return (
  <div className="flex flex-col h-full overflow-hidden">
  <div className="flex flex-col md:flex-row md:items-center justify-between mb-4 pb-4 border-b-2 border-black flex-shrink-0 gap-4">
@@ -461,16 +576,45 @@ function MemoEditor({ memo, onClose, onDelete}: { memo: any, onClose: () => void
  className="text-base md:text-lg font-bold uppercase tracking-wider text-black bg-transparent border-none focus:outline-none focus:ring-0 w-full min-w-0 truncate"
  />
  </div>
- <div className="flex items-center gap-2 self-end md:self-auto shrink-0">
- <Button variant="ghost" size="sm" onClick={() => onDelete(memo)} className="border-2 border-[#CC0000] text-[#CC0000] hover:bg-red-50">
- <Trash2 className="w-4 h-4" />
+ <div className="flex items-center gap-2 self-end md:self-auto shrink-0 relative" ref={menuRef}>
+ <Button variant="ghost" size="sm" onClick={() => setIsMenuOpen(!isMenuOpen)} className="border-2 border-black">
+ <MoreVertical className="w-4 h-4" />
  </Button>
- <Button variant="outline" size="sm" onClick={() => setViewMode(v => v ==='edit' ?'preview' :'edit')} className="border-2 border-black">
- {viewMode ==='edit' ?'Preview' :'Edit'}
- </Button>
- <Button size="sm" onClick={handleSave} disabled={isSaving || (title === memo.title && content === memo.content)} className="bg-[#CC0000] text-white border-2 border-black">
- {isSaving ?'Saving...' :'Save'}
- </Button>
+ {isMenuOpen && (
+ <div className="absolute top-full right-0 mt-2 w-48 bg-white border-2 border-black shadow-lg z-50 flex flex-col">
+ <button 
+ onClick={() => { setViewMode(v => v ==='edit' ?'preview' :'edit'); setIsMenuOpen(false); }}
+ className="px-4 py-3 text-left hover:bg-gray-100 border-b-2 border-black font-bold text-sm uppercase tracking-wider flex items-center gap-2"
+ >
+ <Edit className="w-4 h-4" /> {viewMode ==='edit' ?'Preview' :'Edit'}
+ </button>
+ <button 
+ onClick={() => { handleSave(); setIsMenuOpen(false); }}
+ disabled={isSaving || (title === memo.title && content === memo.content)}
+ className="px-4 py-3 text-left hover:bg-gray-100 border-b-2 border-black font-bold text-sm uppercase tracking-wider disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
+ >
+ <CheckSquare className="w-4 h-4" /> {isSaving ?'Saving...' :'Save'}
+ </button>
+ <button 
+ onClick={() => handleExport('pdf')}
+ className="px-4 py-3 text-left hover:bg-gray-100 border-b-2 border-black font-bold text-sm uppercase tracking-wider flex items-center gap-2"
+ >
+ <Download className="w-4 h-4" /> Export PDF
+ </button>
+ <button 
+ onClick={() => handleExport('word')}
+ className="px-4 py-3 text-left hover:bg-gray-100 border-b-2 border-black font-bold text-sm uppercase tracking-wider flex items-center gap-2"
+ >
+ <FileText className="w-4 h-4" /> Export Word
+ </button>
+ <button 
+ onClick={() => { onDelete(memo); setIsMenuOpen(false); }}
+ className="px-4 py-3 text-left hover:bg-red-50 text-[#CC0000] font-bold text-sm uppercase tracking-wider flex items-center gap-2"
+ >
+ <Trash2 className="w-4 h-4" /> Delete
+ </button>
+ </div>
+ )}
  </div>
  </div>
  <div className="flex-1 overflow-auto bg-white border-2 border-black p-6">
@@ -482,7 +626,8 @@ function MemoEditor({ memo, onClose, onDelete}: { memo: any, onClose: () => void
  placeholder="Write your memo here in Markdown..."
  />
  ) : (
- <div className="prose prose-sm max-w-none">
+ <div id="memo-export-content" className="prose prose-sm max-w-none p-4">
+ <h1 className="text-2xl font-bold mb-6">{title}</h1>
  <ReactMarkdown 
  remarkPlugins={[remarkGfm]}
  components={{

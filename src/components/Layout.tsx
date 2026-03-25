@@ -36,17 +36,17 @@ export default function Layout({ user}: { user: User}) {
  <BrainCircuit className="w-6 h-6 text-white" />
  </div>
  <div className={`overflow-hidden transition-opacity duration-300 ${isSidebarOpen ?'opacity-100' :'md:opacity-0 md:hidden'}`}>
- <h1 className="font-bold text-lg tracking-tight text-black uppercase whitespace-nowrap">Bain Tech DD</h1>
+ <h1 className="font-bold text-lg tracking-tight text-black uppercase whitespace-nowrap">TIGGY</h1>
  <p className="text-[10px] text-gray-500 uppercase tracking-widest font-bold whitespace-nowrap">Agentic AI</p>
  </div>
  </div>
  
  <nav className="flex-1 p-4 space-y-2 overflow-hidden">
  <Link
- to="/"
+ to="/dashboard"
  onClick={() => setIsSidebarOpen(false)}
  className={`flex items-center gap-3 py-2 font-bold uppercase tracking-wider text-sm transition-all border-2 ${
- location.pathname ==='/' ?'bg-[#CC0000] text-white border-black' :'border-transparent text-gray-600 hover:text-black hover:border-black'
+ location.pathname ==='/dashboard' ?'bg-[#CC0000] text-white border-black' :'border-transparent text-gray-600 hover:text-black hover:border-black'
 } ${isSidebarOpen ?'px-3' :'md:justify-center px-3 md:px-0'}`}
  title="Pipeline"
 >
@@ -81,7 +81,7 @@ export default function Layout({ user}: { user: User}) {
  <button onClick={() => setIsSidebarOpen(true)} className="p-2 border-2 border-black bg-white">
  <Menu className="w-5 h-5" />
  </button>
- <div className="ml-4 font-bold uppercase tracking-wider">Bain Tech DD</div>
+ <div className="ml-4 font-bold uppercase tracking-wider">TIGGY</div>
  </div>
  <div className="flex-1 overflow-auto p-4 md:p-8 relative flex flex-col">
  <Outlet />
