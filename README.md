@@ -1,8 +1,8 @@
-# 🏢 Nexus: Enterprise M&A Deal Room & AI Copilot
+# 🏢 TIGGY: Enterprise Tech Due Diligence & AI Copilot
 
-![Nexus Banner](https://picsum.photos/seed/nexus-banner/1200/300?blur=2)
+![TIGGY Banner](https://picsum.photos/seed/nexus-banner/1200/300?blur=2)
 
-**Nexus** is a highly secure, multi-tenant Private Equity and M&A Deal Management platform. Built for top-tier consulting firms and investment banks, it combines real-time collaboration, secure document management, and a context-aware AI Copilot powered by Google's Gemini 3.1 Pro to accelerate the due diligence phase.
+**TIGGY** is a highly secure, multi-tenant Technology Due Diligence platform tailored specifically for Bain TIG (Technology & Innovation Group) professionals. Built for the high-stakes, fast-paced environment of Private Equity M&A, it combines real-time collaboration, secure document management, and a context-aware AI Copilot powered by Google's Gemini 3.1 Pro to accelerate tech diligence, automate risk scoring, and generate actionable IC memo insights.
 
 ---
 
