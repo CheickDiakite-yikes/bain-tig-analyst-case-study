@@ -412,20 +412,26 @@ export default function LandingPage() {
       <section className="py-6 bg-black text-white border-y-2 border-black overflow-hidden flex whitespace-nowrap">
         <motion.div
           animate={{ x: ["0%", "-50%"] }}
-          transition={{ repeat: Infinity, ease: "linear", duration: 20 }}
+          transition={{ repeat: Infinity, ease: "linear", duration: 40 }}
           className="flex gap-12 items-center text-lg md:text-xl font-black uppercase tracking-widest w-max"
         >
           {[...Array(4)].map((_, i) => (
             <div key={i} className="flex gap-12 items-center">
-              <span>Due Diligence</span>
+              <span>Tech Due Diligence</span>
               <span className="text-[#CC0000]">///</span>
-              <span>Market Sizing</span>
+              <span>AI Readiness</span>
               <span className="text-[#CC0000]">///</span>
-              <span>Tech Stack Audit</span>
+              <span>Vibecode Analysis</span>
+              <span className="text-[#CC0000]">///</span>
+              <span>Architecture Review</span>
               <span className="text-[#CC0000]">///</span>
               <span>Moat Analysis</span>
               <span className="text-[#CC0000]">///</span>
-              <span>Financial Modeling</span>
+              <span>Codebase Analysis</span>
+              <span className="text-[#CC0000]">///</span>
+              <span>Cybersecurity Audit</span>
+              <span className="text-[#CC0000]">///</span>
+              <span>Scalability Assessment</span>
               <span className="text-[#CC0000]">///</span>
             </div>
           ))}

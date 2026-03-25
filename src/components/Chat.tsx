@@ -169,6 +169,7 @@ CRITICAL INSTRUCTIONS FOR YOUR ANALYSIS AND MEMOS:
 6. IMMEDIATE ACTION: When asked to perform a task (like creating a memo, analyzing a file, or generating an image), DO NOT output conversational filler, summaries, or intermediate steps. Immediately call the necessary tools to complete the task. Only output text when the entire task is complete and you are providing the final result to the user. CRITICAL: You MUST use the structured function calling API to invoke tools. NEVER just type "Use the [tool] tool" in your text response. If you type "Use the createMemo tool" instead of actually calling the function, the system will fail. Do not output internal tool instructions.
 7. DO NOT OVER-GENERATE: Only create a memo if explicitly asked to draft or create one. If the user asks you to create tasks, ONLY create tasks. Do not re-draft or create a new memo unless specifically requested.
 8. DATA ROOM FOLDERS: The Data Room files are organized into folders (e.g., [Folder: Uploaded Documents], [Folder: AI Generated Assets]). Pay attention to these folders when looking for specific types of files.
+9. LANGUAGE: You MUST ALWAYS respond in English, regardless of the prompt's language or context. Never output Chinese or any other language.
 
 When asked to generate or draft a Tech Due Diligence (Tech DD) memo, you MUST use the createMemo tool. The content of the memo MUST follow this highly structured framework. Use these exact headers, pulling context from the Data Room files AND your deep online research:
 
@@ -276,15 +277,15 @@ Use the updateDealMemory tool to save important context, summaries, or facts abo
 
  const updateMemoFunction: FunctionDeclaration = {
  name:"updateMemo",
- description:"Update an existing memo in the database.",
+ description:"Update an existing memo in the database. You can update just the title, just the content, or both. Only provide the fields you want to change.",
  parameters: {
  type: Type.OBJECT,
  properties: {
  memoId: { type: Type.STRING, description:"The ID of the memo to update."},
- title: { type: Type.STRING, description:"The updated title of the memo."},
- content: { type: Type.STRING, description:"The updated full markdown content of the memo."}
+ title: { type: Type.STRING, description:"The updated title of the memo. Omit if not changing."},
+ content: { type: Type.STRING, description:"The updated full markdown content of the memo. Omit if not changing."}
 },
- required: ["memoId","title","content"]
+ required: ["memoId"]
 }
 };
 
@@ -475,11 +476,11 @@ Use the updateDealMemory tool to save important context, summaries, or facts abo
  setLoadingStage('Updating memo...');
  const args = call.args as any;
  try {
- await updateDoc(doc(db,'memos', args.memoId), {
- title: args.title ? cleanText(args.title) || 'Untitled Memo' : 'Untitled Memo',
- content: cleanText(args.content) || 'Empty memo content.',
- updatedAt: new Date().toISOString()
-});
+ const updateData: any = { updatedAt: new Date().toISOString() };
+ if (args.title) updateData.title = cleanText(args.title);
+ if (args.content) updateData.content = cleanText(args.content);
+ 
+ await updateDoc(doc(db,'memos', args.memoId), updateData);
  currentFunctionResponses.push({
  name: call.name,
  id: call.id,
