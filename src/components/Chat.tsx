@@ -11,8 +11,15 @@ import { ImageViewerModal} from'./ui/ImageViewerModal';
 import ReactMarkdown from'react-markdown';
 import remarkGfm from'remark-gfm';
 
-const getAI = () => {
-  return new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY || '' });
+const getAI = async () => {
+  try {
+    const res = await fetch('/api/config');
+    const data = await res.json();
+    return new GoogleGenAI({ apiKey: data.apiKey || '' });
+  } catch (e) {
+    console.error("Failed to fetch API key:", e);
+    return new GoogleGenAI({ apiKey: '' });
+  }
 };
 
 const cleanText = (input: string) => {
@@ -390,7 +397,7 @@ Use the updateDealMemory tool to save important context, summaries, or facts abo
 
  historyContents.push({ role:'user', parts: currentParts});
 
- const ai = getAI();
+ const ai = await getAI();
  let responseStream = await ai.models.generateContentStream({
  model: modelName,
  contents: historyContents,
@@ -589,7 +596,7 @@ Use the updateDealMemory tool to save important context, summaries, or facts abo
  try {
  const promptText = cleanText(args.prompt) || "A professional, high-quality image, chart, or architecture diagram.";
  
- const imageAi = getAI();
+ const imageAi = await getAI();
  const response = await imageAi.models.generateContent({
    model: 'gemini-3.1-flash-image-preview',
    contents: { parts: [{ text: promptText }] },
@@ -762,7 +769,7 @@ Use the updateDealMemory tool to save important context, summaries, or facts abo
 });
 
  // Call the model again to get the final text response or more function calls
- const aiNext = getAI();
+ const aiNext = await getAI();
  currentStream = await aiNext.models.generateContentStream({
  model: modelName,
  contents: historyContents,

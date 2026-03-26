@@ -13,6 +13,11 @@ async function startServer() {
     res.json({ status: "ok" });
   });
 
+  app.get("/api/config", (req, res) => {
+    res.setHeader('Cache-Control', 'no-store');
+    res.json({ apiKey: process.env.API_KEY || process.env.GEMINI_API_KEY || process.env.VITE_GEMINI_API_KEY || "" });
+  });
+
   // Serve a self-destructing service worker to clean up any stale service workers
   // This fixes the "unsupported MIME type ('text/html')" error and forces clients to reload.
   app.get(/^\/.*service-worker\.js$/, (req, res) => {
