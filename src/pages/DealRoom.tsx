@@ -649,7 +649,7 @@ function MemoEditor({ memo, onClose, onDelete}: { memo: any, onClose: () => void
  placeholder="Write your memo here in Markdown..."
  />
  ) : (
- <div id="memo-export-content" className="prose prose-sm max-w-none p-4">
+ <div id="memo-export-content" className="prose prose-sm max-w-none p-4 prose-pre:overflow-x-auto prose-pre:max-w-full break-words">
  <h1 className="text-2xl font-bold mb-6">{title}</h1>
  <ReactMarkdown 
  remarkPlugins={[remarkGfm]}

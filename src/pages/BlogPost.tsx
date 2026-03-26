@@ -62,7 +62,7 @@ export default function BlogPost() {
             />
           </div>
 
-          <div className="prose prose-lg max-w-none prose-headings:font-black prose-headings:uppercase prose-headings:tracking-tight prose-a:text-[#CC0000] prose-a:font-bold prose-strong:font-black text-gray-800">
+          <div className="prose prose-lg max-w-none prose-headings:font-black prose-headings:uppercase prose-headings:tracking-tight prose-a:text-[#CC0000] prose-a:font-bold prose-strong:font-black text-gray-800 prose-pre:overflow-x-auto prose-pre:max-w-full break-words">
             {slug === 'meet-tiggy' && (
               <>
                 <p className="lead text-2xl font-medium border-l-4 border-[#CC0000] pl-6 mb-8">

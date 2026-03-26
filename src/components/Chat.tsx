@@ -360,8 +360,7 @@ Use the updateDealMemory tool to save important context, summaries, or facts abo
  type: Type.OBJECT,
  properties: {
  prompt: { type: Type.STRING, description:"Detailed prompt for the image generation. Specify that it should look like a professional Bain & Company consulting slide, chart, or architecture diagram."},
- imageSize: { type: Type.STRING, description:"Optional. The size of the generated image. Supported values:'512px','1K','2K','4K'. Default is'1K'."},
- aspectRatio: { type: Type.STRING, description:"Optional. The aspect ratio of the generated image. Supported values:'1:1','3:4','4:3','9:16','16:9','1:4','1:8','4:1','8:1'. Default is'1:1'."}
+ aspectRatio: { type: Type.STRING, description:"Optional. The aspect ratio of the generated image. Supported values:'1:1','3:4','4:3','9:16','16:9'. Default is'1:1'."}
 },
  required: ["prompt"]
 }
@@ -585,15 +584,13 @@ Use the updateDealMemory tool to save important context, summaries, or facts abo
  setLoadingStage('Generating image...');
  const args = call.args as any;
  try {
- const currentAi = new GoogleGenAI({ apiKey: (process.env.API_KEY || process.env.GEMINI_API_KEY) as string});
  const promptText = cleanText(args.prompt) || "A professional, high-quality image, chart, or architecture diagram.";
- const imageResponse = await currentAi.models.generateContent({
- model:'gemini-3.1-flash-image-preview',
+ const imageResponse = await ai.models.generateContent({
+ model:'gemini-2.5-flash-image',
  contents: { parts: [{ text: promptText}]},
  config: {
  imageConfig: {
- aspectRatio: args.aspectRatio ||"1:1",
- imageSize: args.imageSize ||"1K"
+ aspectRatio: args.aspectRatio ||"1:1"
 }
 }
 });
@@ -878,7 +875,7 @@ if (fullText && !fullText.endsWith('\n') && !fullText.endsWith(' ')) {
  ?'bg-red-50 text-[#CC0000]'
  :'bg-white text-black'
 }`}>
- <div className="prose prose-sm md:prose-base max-w-none font-medium leading-relaxed text-black prose-p:text-black prose-headings:text-black prose-strong:text-black prose-a:text-[#CC0000] prose-a:break-all prose-li:text-black break-words">
+ <div className="prose prose-sm md:prose-base max-w-none font-medium leading-relaxed text-black prose-p:text-black prose-headings:text-black prose-strong:text-black prose-a:text-[#CC0000] prose-a:break-all prose-li:text-black prose-pre:overflow-x-auto prose-pre:max-w-full break-words">
  <ReactMarkdown 
  remarkPlugins={[remarkGfm]}
  components={{
