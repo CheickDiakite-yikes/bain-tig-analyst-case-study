@@ -611,7 +611,7 @@ Use the updateDealMemory tool to save important context, summaries, or facts abo
  
  const imageAi = await getAI();
  const response = await imageAi.models.generateContent({
-   model: 'gemini-3.1-flash-image-preview',
+   model: 'gemini-2.5-flash-image',
    contents: { parts: [{ text: promptText }] },
    config: {
      imageConfig: {
