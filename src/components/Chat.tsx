@@ -12,14 +12,27 @@ import ReactMarkdown from'react-markdown';
 import remarkGfm from'remark-gfm';
 
 const getAI = async () => {
-  try {
-    const res = await fetch('/api/config');
-    const data = await res.json();
-    return new GoogleGenAI({ apiKey: data.apiKey || '' });
-  } catch (e) {
-    console.error("Failed to fetch API key:", e);
-    return new GoogleGenAI({ apiKey: '' });
+  // 1. Try the build-time injected key (works perfectly in AI Studio)
+  let apiKey = process.env.GEMINI_API_KEY;
+  
+  // 2. If missing (e.g., deployed to Cloud Run via Cloud Build), fetch from backend
+  if (!apiKey || String(apiKey) === 'undefined' || String(apiKey) === 'null') {
+    try {
+      const res = await fetch('/api/config');
+      if (res.ok) {
+        const data = await res.json();
+        apiKey = data.apiKey;
+      }
+    } catch (e) {
+      console.error("Failed to fetch API key from server:", e);
+    }
   }
+
+  if (!apiKey) {
+    throw new Error("API key is missing. Please add GEMINI_API_KEY to your Cloud Run service environment variables.");
+  }
+
+  return new GoogleGenAI({ apiKey });
 };
 
 const cleanText = (input: string) => {
