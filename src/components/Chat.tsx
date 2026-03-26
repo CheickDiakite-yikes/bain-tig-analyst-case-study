@@ -692,13 +692,7 @@ Use the updateDealMemory tool to save important context, summaries, or facts abo
  const storageRef = ref(storage, `deals/${dealId}/${file.name}`);
  let blob: Blob;
  try {
- // First try fetching directly from the download URL (often bypasses some SDK limits)
- const response = await fetch(file.url);
- if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
- blob = await response.blob();
-} catch (fetchErr) {
- console.warn("Fetch failed, falling back to local proxy", fetchErr);
- try {
+ // Always use local proxy to avoid annoying CORS errors in the console
  const proxyUrl = `/api/proxy?url=${encodeURIComponent(file.url)}`;
  const proxyResponse = await fetch(proxyUrl);
  if (!proxyResponse.ok) throw new Error(`Proxy HTTP error! status: ${proxyResponse.status}`);
@@ -708,7 +702,6 @@ Use the updateDealMemory tool to save important context, summaries, or facts abo
  // Fallback to getBytes with a 50MB limit
  const arrayBuffer = await getBytes(storageRef, 50 * 1024 * 1024);
  blob = new Blob([arrayBuffer], { type: file.type});
-}
 }
  
  const reader = new FileReader();
