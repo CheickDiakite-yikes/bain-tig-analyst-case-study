@@ -11,6 +11,10 @@ async function startServer() {
     res.json({ status: "ok" });
   });
 
+  app.get("/api/config", (req, res) => {
+    res.json({ apiKey: process.env.API_KEY || process.env.GEMINI_API_KEY || "" });
+  });
+
   app.get("/api/proxy", async (req, res) => {
     const url = req.query.url as string;
     if (!url) {
