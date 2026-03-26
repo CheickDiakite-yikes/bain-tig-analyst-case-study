@@ -1,6 +1,8 @@
+import "dotenv/config";
 import express from "express";
 import { createServer as createViteServer } from "vite";
 import path from "path";
+import { GoogleGenAI } from "@google/genai";
 
 async function startServer() {
   const app = express();
@@ -11,8 +13,18 @@ async function startServer() {
     res.json({ status: "ok" });
   });
 
-  app.get("/api/config", (req, res) => {
-    res.json({ apiKey: process.env.API_KEY || process.env.GEMINI_API_KEY || "" });
+  // Serve a self-destructing service worker to clean up any stale service workers
+  // This fixes the "unsupported MIME type ('text/html')" error and forces clients to reload.
+  app.get(/^\/.*service-worker\.js$/, (req, res) => {
+    res.setHeader("Content-Type", "application/javascript");
+    res.send(`
+      self.addEventListener('install', function(e) {
+        self.skipWaiting();
+      });
+      self.addEventListener('activate', function(e) {
+        self.registration.unregister();
+      });
+    `);
   });
 
   app.get("/api/proxy", async (req, res) => {
