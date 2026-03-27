@@ -27,8 +27,8 @@ const stripMarkdown = (text: string) => {
 export default function DealRoom({ user}: { user: User}) {
  const { dealId} = useParams<{ dealId: string}>();
  const [deal, setDeal] = useState<any>(null);
- const [activeTab, setActiveTab] = useState<'memos' |'files' |'tasks'>('memos');
- const [isChatOpen, setIsChatOpen] = useState(true);
+ const [activeTab, setActiveTab] = useState<'memos' |'files' |'tasks'>('files');
+ const [isChatOpen, setIsChatOpen] = useState(window.innerWidth >= 768);
  const [files, setFiles] = useState<any[]>([]);
  const [memos, setMemos] = useState<any[]>([]);
  const [tasks, setTasks] = useState<any[]>([]);
