@@ -661,12 +661,43 @@ Use the updateDealMemory tool to save important context, summaries, or facts abo
 });
 }
 } catch (err: any) {
- console.error("Error generating image:", err);
- currentFunctionResponses.push({
- name: call.name,
- id: call.id,
- response: { error: `Failed to generate image: ${err.message}`}
-});
+  console.error("Error generating image:", err);
+  console.error("Image generation error details:", {
+    message: err.message,
+    stack: err.stack,
+    name: err.name,
+    status: err.status,
+    details: err.details
+  });
+  
+  let imgErrorMessage = err.message || "Unknown error";
+  try {
+    if (imgErrorMessage.includes('{')) {
+      const jsonStart = imgErrorMessage.indexOf('{');
+      const jsonStr = imgErrorMessage.substring(jsonStart);
+      const parsed = JSON.parse(jsonStr);
+      if (parsed.error && parsed.error.message) {
+        if (typeof parsed.error.message === 'string' && parsed.error.message.includes('{')) {
+           try {
+             const nestedParsed = JSON.parse(parsed.error.message);
+             if (nestedParsed.error && nestedParsed.error.message) {
+               imgErrorMessage = `API Error (${nestedParsed.error.code || 'Unknown'}): ${nestedParsed.error.message}`;
+             }
+           } catch (e) {
+             imgErrorMessage = `API Error: ${parsed.error.message}`;
+           }
+        } else {
+          imgErrorMessage = `API Error: ${parsed.error.message}`;
+        }
+      }
+    }
+  } catch (e) {}
+
+  currentFunctionResponses.push({
+  name: call.name,
+  id: call.id,
+  response: { error: `Failed to generate image: ${imgErrorMessage}`}
+ });
 }
 } else if (call.name ==='updateDealMemory') {
  const args = call.args as any;
@@ -816,10 +847,47 @@ if (fullText && !fullText.endsWith('\n') && !fullText.endsWith(' ')) {
 
 } catch (error: any) {
  console.error("Error sending message:", error);
+ console.error("Error details:", {
+   message: error.message,
+   stack: error.stack,
+   name: error.name,
+   status: error.status,
+   details: error.details,
+   model: modelName
+ });
+ 
+ let errorMessage = error.message || "An unknown error occurred.";
+ 
+ // Try to parse JSON error messages for better readability
+ try {
+   if (errorMessage.includes('{')) {
+     const jsonStart = errorMessage.indexOf('{');
+     const jsonStr = errorMessage.substring(jsonStart);
+     const parsed = JSON.parse(jsonStr);
+     if (parsed.error && parsed.error.message) {
+       // Handle nested stringified JSON (like the 503 error)
+       if (typeof parsed.error.message === 'string' && parsed.error.message.includes('{')) {
+          try {
+            const nestedParsed = JSON.parse(parsed.error.message);
+            if (nestedParsed.error && nestedParsed.error.message) {
+              errorMessage = `API Error (${nestedParsed.error.code || 'Unknown'}): ${nestedParsed.error.message}`;
+            }
+          } catch (e) {
+            errorMessage = `API Error: ${parsed.error.message}`;
+          }
+       } else {
+         errorMessage = `API Error: ${parsed.error.message}`;
+       }
+     }
+   }
+ } catch (e) {
+   // Keep original message if parsing fails
+ }
+
  await addDoc(collection(db,'messages'), {
  dealId,
  role:'system',
- content: `Error: ${error.message}`,
+ content: `**Error:** ${errorMessage}\n\n*Model used: ${modelName}*\n\nIf this is a 503 Service Unavailable error, the Gemini API is currently overloaded or down. Please try again in a few minutes. Check the browser console for full technical details.`,
  tenantId: tenantId,
  createdAt: new Date().toISOString()
 });
