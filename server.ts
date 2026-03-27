@@ -6,7 +6,7 @@ import { GoogleGenAI } from "@google/genai";
 
 async function startServer() {
   const app = express();
-  const PORT = 3000;
+  const PORT = process.env.PORT || 3000;
 
   // API routes FIRST
   app.get("/api/health", (req, res) => {
@@ -15,7 +15,14 @@ async function startServer() {
 
   app.get("/api/config", (req, res) => {
     res.setHeader('Cache-Control', 'no-store');
-    res.json({ apiKey: process.env.API_KEY || process.env.GEMINI_API_KEY || process.env.VITE_GEMINI_API_KEY || "" });
+    
+    // Prioritize GEMINI_API_KEY (the app's built-in secret) over API_KEY (user-provided)
+    let key = process.env.GEMINI_API_KEY || process.env.VITE_GEMINI_API_KEY || process.env.API_KEY || "";
+    if (key === 'undefined' || key === 'null') {
+      key = "";
+    }
+    
+    res.json({ apiKey: key });
   });
 
   // Serve a self-destructing service worker to clean up any stale service workers

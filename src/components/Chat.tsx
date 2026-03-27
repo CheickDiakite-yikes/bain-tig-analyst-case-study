@@ -12,27 +12,37 @@ import ReactMarkdown from'react-markdown';
 import remarkGfm from'remark-gfm';
 
 const getAI = async () => {
+  console.log("[Tracing] Initializing AI client...");
   // 1. Try the build-time injected key (works perfectly in AI Studio)
   let apiKey = process.env.GEMINI_API_KEY;
   
   // 2. If missing (e.g., deployed to Cloud Run via Cloud Build), fetch from backend
   if (!apiKey || String(apiKey) === 'undefined' || String(apiKey) === 'null') {
+    console.log("[Tracing] Build-time key missing or invalid, fetching from /api/config...");
     try {
       const res = await fetch('/api/config');
       if (res.ok) {
         const data = await res.json();
         apiKey = data.apiKey;
+        console.log("[Tracing] Successfully fetched API key from server.");
+      } else {
+        console.error("[Tracing] Server returned error status for API key:", res.status);
       }
     } catch (e) {
-      console.error("Failed to fetch API key from server:", e);
+      console.error("[Tracing] Failed to fetch API key from server:", e);
     }
+  } else {
+    console.log("[Tracing] Using build-time injected API key.");
   }
 
-  if (!apiKey) {
-    throw new Error("API key is missing. Please add GEMINI_API_KEY to your Cloud Run service environment variables.");
+  // Double check the final key
+  if (!apiKey || String(apiKey) === 'undefined' || String(apiKey) === 'null' || String(apiKey).trim() === '') {
+    console.error("[Tracing] FATAL: API key is completely missing or invalid after all retrieval attempts.");
+    throw new Error("API key is missing or invalid. Please add GEMINI_API_KEY to your Cloud Run service environment variables.");
   }
 
-  return new GoogleGenAI({ apiKey });
+  console.log(`[Tracing] AI client initialized successfully. Key length: ${String(apiKey).trim().length}`);
+  return new GoogleGenAI({ apiKey: String(apiKey).trim() });
 };
 
 const cleanText = (input: string) => {
@@ -122,8 +132,15 @@ export default function Chat({ deal, dealId, user, files, memos, tasks, onClose,
  e.preventDefault();
  if ((!input.trim() && attachments.length === 0) || isTyping) return;
 
+ console.log(`[Tracing] --- New Chat Request Started ---`);
+ console.log(`[Tracing] Input length: ${input.length}, Attachments: ${attachments.length}`);
+
  const userMsg = input;
  const currentAttachments = [...attachments];
+ const modelName = thinkingMode ? 'gemini-3.1-pro-preview' : 'gemini-3-flash-preview';
+ 
+ console.log(`[Tracing] Selected Model: ${modelName}, Thinking Mode: ${thinkingMode}`);
+ 
  setInput('');
  setAttachments([]);
  setIsTyping(true);
@@ -254,8 +271,6 @@ If asked to generate or draft a memo, you MUST use the createMemo tool to save i
 If asked to create a task, use the createTask tool. If asked to update a task's status or priority, use the updateTask tool. If asked to delete a task, use the deleteTask tool.
 If asked to analyze, summarize, or extract data from a file in the Data Room, use the analyzeDataRoomFile tool.
 Use the updateDealMemory tool to save important context, summaries, or facts about this deal that you should remember across multiple interactions.${dealContext}${fileContextStr}${memoContext}${taskContext}`;
-
- const modelName = thinkingMode ?'gemini-3.1-pro-preview' :'gemini-3-flash-preview';
 
  const analyzeDataRoomFileFunction: FunctionDeclaration = {
  name:"analyzeDataRoomFile",
@@ -609,6 +624,11 @@ Use the updateDealMemory tool to save important context, summaries, or facts abo
  try {
  const promptText = cleanText(args.prompt) || "A professional, high-quality image, chart, or architecture diagram.";
  
+ console.log(`[Tracing] --- Image Generation Started ---`);
+ console.log(`[Tracing] Image Prompt: "${promptText.substring(0, 100)}..."`);
+ console.log(`[Tracing] Aspect Ratio: ${args.aspectRatio || "1:1"}`);
+ console.log(`[Tracing] Model: gemini-2.5-flash-image`);
+ 
  const imageAi = await getAI();
  const response = await imageAi.models.generateContent({
    model: 'gemini-2.5-flash-image',
@@ -619,6 +639,8 @@ Use the updateDealMemory tool to save important context, summaries, or facts abo
      }
    }
  });
+
+ console.log(`[Tracing] Image generation API call completed. Parsing response...`);
 
  let base64Image = '';
  if (response.candidates && response.candidates.length > 0 && response.candidates[0].content?.parts) {
@@ -631,10 +653,12 @@ Use the updateDealMemory tool to save important context, summaries, or facts abo
  }
  
  if (base64Image) {
+ console.log(`[Tracing] Image successfully extracted from response. Uploading to storage...`);
  const imageId = crypto.randomUUID();
  const imageRef = ref(storage, `deals/${dealId}/images/${imageId}.png`);
  await uploadString(imageRef, base64Image,'base64', { contentType:'image/png'});
  const downloadUrl = await getDownloadURL(imageRef);
+ console.log(`[Tracing] Image uploaded successfully. URL: ${downloadUrl}`);
  
  // Save image to Data Room
  await addDoc(collection(db,'files'), {
@@ -846,6 +870,7 @@ if (fullText && !fullText.endsWith('\n') && !fullText.endsWith(' ')) {
  await addDoc(collection(db,'messages'), aiMessage);
 
 } catch (error: any) {
+ console.error("[Tracing] Catch block triggered in handleSend");
  console.error("Error sending message:", error);
  console.error("Error details:", {
    message: error.message,
