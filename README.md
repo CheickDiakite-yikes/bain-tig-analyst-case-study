@@ -50,54 +50,90 @@ tiggy/
 The application follows a modern, serverless, event-driven architecture utilizing Firebase for real-time backend services and Google Gen AI for intelligent, agentic features.
 
 ```text
-==========================================================================================
-                              🖥️  CLIENT APPLICATION (FRONTEND)
-                     React 18 | Vite | Tailwind CSS | shadcn/ui | Framer Motion
-==========================================================================================
-      |                                |                                |
-[ Auth Provider ]              [ Deal Room State ]               [ AI Chat Interface ]
-- Google OAuth                 - Active Tab Management           - Streaming UI
-- Tenant ID Extraction         - Optimistic UI Updates           - Markdown Rendering
-      |                                |                                |
-      | (JWT Token)                    | (CRUD & onSnapshot)            | (Prompts & Files)
-      v                                v                                v
-==========================================================================================
-                              ☁️  FIREBASE BACKEND SERVICES
-==========================================================================================
-+-------------------+  +-----------------------------------+  +--------------------------+
-| 🔐 FIREBASE AUTH  |  | 🗄️ CLOUD FIRESTORE (NoSQL)        |  | 📦 FIREBASE STORAGE      |
-| - Identity Mgt    |  | - Collections: Users, Deals,      |  | - Data Room Assets       |
-| - Domain Parsing  |  |   Memos, Tasks, Messages          |  | - Uploads (PDF, PPTX)    |
-| - Session Control |  | - Real-time Sync (WebSockets)     |  | - AI Generated Images    |
-+---------+---------+  +-----------------+-----------------+  +-------------+------------+
-          |                              |                                  |
-          +------------------------------+----------------------------------+
-                                         |
-                           [ 🛡️ FIREBASE SECURITY RULES ]
-                           - Tenant Isolation (RBAC)
-                           - Schema Validation
-                           - Immutable Audit Trails
-                                         |
-==========================================================================================
-                              🧠  INTELLIGENT AI LAYER
-==========================================================================================
-                                         | (Context, History, File URIs)
-                                         v
-                       +---------------------------------------+
-                       |       🤖 GOOGLE GEMINI 3.1 PRO        |
-                       |                                       |
-                       |  [ Core Capabilities ]                |
-                       |  - Multimodal Analysis (Vision/Text)  |
-                       |  - Streaming Responses                |
-                       |  - Google Search Grounding            |
-                       |                                       |
-                       |  [ Function Calling (Tools) ]         |
-                       |  ⚙️ createMemoFunction                |
-                       |  ⚙️ readMemoFunction                  |
-                       |  ⚙️ updateTaskFunction                |
-                       |  ⚙️ analyzeDataRoomFileFunction       |
-                       |  ⚙️ updateDealMemoryFunction          |
-                       +---------------------------------------+
++-----------------------------------------------------------------------------------------+
+|                                  CLIENT TIER (React 18 + Vite)                          |
+|                                                                                         |
+|  +--------------------+  +-----------------------+  +--------------------------------+  |
+|  |   Auth Context     |  |    Deal Room State    |  |      AI Chat Interface         |  |
+|  | (Google Provider)  |  | (Zustand/React State) |  | (Streaming UI, Markdown Render)|  |
+|  +---------+----------+  +-----------+-----------+  +----------------+---------------+  |
+|            |                         |                               |                  |
++------------|-------------------------|-------------------------------|------------------+
+             | JWT                     | CRUD / onSnapshot             | Prompt / Tools
+             v                         v                               v
++-----------------------------------------------------------------------------------------+
+|                                 DATA & SECURITY TIER                                    |
+|                                                                                         |
+|  +--------------------+  +-----------------------+  +--------------------------------+  |
+|  |   FIREBASE AUTH    |  |   CLOUD FIRESTORE     |  |        FIREBASE STORAGE        |  |
+|  | - Identity Mgmt    |  | - Users, Deals, Memos |  | - Data Room Assets (PDF, PPTX) |  |
+|  | - Domain Parsing   |  | - Tasks, Messages     |  | - AI Generated Images          |  |
+|  +---------+----------+  +-----------+-----------+  +----------------+---------------+  |
+|            |                         |                               |                  |
+|            +-------------------------+-------------------------------+                  |
+|                                      |                                                  |
+|                        +-------------+-------------+                                    |
+|                        | FIREBASE SECURITY RULES   |                                    |
+|                        | - Tenant Isolation (RBAC) |                                    |
+|                        | - Schema Validation       |                                    |
+|                        +-------------+-------------+                                    |
++--------------------------------------|--------------------------------------------------+
+                                       | Context, History, File URIs
+                                       v
++-----------------------------------------------------------------------------------------+
+|                                   INTELLIGENCE TIER                                     |
+|                                                                                         |
+|  +-----------------------------------------------------------------------------------+  |
+|  |                           GOOGLE GEMINI 3.1 PRO API                               |  |
+|  |                                                                                   |  |
+|  |  [Core Capabilities]                  [Function Calling / Tools]                  |  |
+|  |  - Multimodal Analysis (Vision/Text)  - createMemoFunction()                      |  |
+|  |  - Streaming Responses                - readMemoFunction()                        |  |
+|  |  - Google Search Grounding            - updateTaskFunction()                      |  |
+|  |                                       - analyzeDataRoomFileFunction()             |  |
+|  |                                       - updateDealMemoryFunction()                |  |
+|  +-----------------------------------------------------------------------------------+  |
++-----------------------------------------------------------------------------------------+
+```
+
+---
+
+## 🔄 Sequence Diagram: AI Copilot Interaction
+
+This sequence diagram illustrates the flow of data when a user interacts with the AI Copilot to analyze a document and generate an Investment Committee (IC) memo.
+
+```mermaid
+sequenceDiagram
+    autonumber
+    actor User
+    participant UI as Client Application
+    participant FB as Firebase (Auth/Firestore/Storage)
+    participant Gemini as Gemini 3.1 Pro API
+
+    User->>UI: Opens Deal Room
+    UI->>FB: Authenticate & Request Deal Data
+    FB-->>UI: Return Deal, Memos, Tasks (via onSnapshot)
+    
+    User->>UI: Uploads CIM Document (PDF)
+    UI->>FB: Upload to Firebase Storage
+    FB-->>UI: Return Secure Storage URI
+    
+    User->>UI: "Analyze this CIM and draft a memo"
+    UI->>Gemini: Send Prompt + File URI + Chat History
+    
+    activate Gemini
+    Gemini->>Gemini: Multimodal Analysis of PDF
+    Gemini-->>UI: Stream response chunks (Thoughts/Text)...
+    
+    Gemini->>UI: Tool Call: `createMemoFunction(title, content)`
+    UI->>FB: Execute Firestore Write (Memos Collection)
+    FB-->>UI: Confirm Write (Triggers onSnapshot update)
+    UI-->>Gemini: Tool Response (Success)
+    
+    Gemini-->>UI: Finalize stream ("Memo created successfully")
+    deactivate Gemini
+    
+    UI->>User: Displays new Memo in UI in real-time
 ```
 
 ---
