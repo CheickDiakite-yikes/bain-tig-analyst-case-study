@@ -659,6 +659,7 @@ function MemoEditor({ memo, onClose, onDelete}: { memo: any, onClose: () => void
  {...props} 
  className="cursor-pointer hover:opacity-80 transition-opacity border-2 border-black my-4"
  onClick={() => setViewingImage(props.src || null)}
+ referrerPolicy="no-referrer"
  />
  )
 }}

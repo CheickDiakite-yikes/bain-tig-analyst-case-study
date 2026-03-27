@@ -996,6 +996,7 @@ if (fullText && !fullText.endsWith('\n') && !fullText.endsWith(' ')) {
  {...props} 
  className="cursor-pointer hover:opacity-80 transition-opacity border-2 border-black my-4"
  onClick={() => setViewingImage(props.src || null)}
+ referrerPolicy="no-referrer"
  />
  )
 }}
@@ -1042,6 +1043,7 @@ if (fullText && !fullText.endsWith('\n') && !fullText.endsWith(' ')) {
  {...props} 
  className="cursor-pointer hover:opacity-80 transition-opacity border-2 border-black my-4"
  onClick={() => setViewingImage(props.src || null)}
+ referrerPolicy="no-referrer"
  />
  )
 }}
