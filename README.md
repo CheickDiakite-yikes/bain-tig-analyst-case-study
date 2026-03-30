@@ -255,6 +255,30 @@ interface Message {
 
 ---
 
+## 🗺️ Roadmap
+
+The TIGGY platform is under active development. Our upcoming features include:
+
+*   **Multi-User Real-Time Presence:** See who else is in the Deal Room with live cursors and presence indicators.
+*   **Advanced Data Visualization:** Integrated D3.js charts for visualizing financial metrics, tech stack dependencies, and risk distributions.
+*   **Automated Risk Scoring:** An AI-driven engine that automatically scores target company tech stacks based on uploaded architecture documents.
+*   **Remediation Tracking Integrations:** Direct sync with Jira and GitHub to track post-close remediation items and technical debt.
+*   **Export to PDF/DOCX:** One-click export of AI-generated IC memos and diligence reports to professional document formats.
+
+---
+
+## 🤝 Contribution
+
+We welcome contributions from the Bain TIG community! To contribute:
+
+1.  **Fork the Repository:** Create your own copy of the project.
+2.  **Create a Feature Branch:** `git checkout -b feature/amazing-feature`
+3.  **Commit Your Changes:** `git commit -m 'Add some amazing feature'`
+4.  **Push to the Branch:** `git push origin feature/amazing-feature`
+5.  **Open a Pull Request:** Submit your changes for review.
+
+---
+
 ## 💻 Development Guide
 
 ### Prerequisites
